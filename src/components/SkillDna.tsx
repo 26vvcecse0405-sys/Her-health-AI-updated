@@ -54,7 +54,7 @@ export function SkillDna({
   const tip = theme === 'light'
     ? { background: '#ffffff', border: '1px solid #d5deee', borderRadius: 12, color: '#0f172a' }
     : { background: '#12182c', border: '1px solid #2a3658', borderRadius: 12, color: '#e8eefc' }
-  const point = Object.fromEntries(spots.map((spot) => [spot.id, spot])) as Record<SkillId, { x: number; y: number }>
+  const point = Object.fromEntries(spots.map((spot) => [spot.id, spot])) as unknown as Record<SkillId, { x: number; y: number }>
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">

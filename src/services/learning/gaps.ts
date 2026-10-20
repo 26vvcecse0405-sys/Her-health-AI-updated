@@ -23,7 +23,7 @@ export function skillGaps(profile: StudentProfile, bySkill: ScoredAttempt['bySki
     const severity: GapInsight['severity'] = gap === 0 ? 'none' : gap <= 15 ? 'small' : gap <= 35 ? 'moderate' : 'large'
     const skill = skillById[item.skillId]
     const why = [
-      `${skill.label} matters here because ${career.reasons[item.skillId]}`,
+      `${skill.label} matters for this target. ${career.reasons[item.skillId]}`,
       `You demonstrated ${demonstrated}. The configurable target for ${career.label} is ${target}.`,
       `Skill gap = max(0, ${target} − ${demonstrated}) = ${gap}.`,
       `Priority = ${gap} × ${relevance} career relevance × ${interest} interest match = ${priority}.`,

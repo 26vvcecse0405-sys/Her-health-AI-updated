@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { careerById, educationLabels, skillById, styleLabels } from '../data/catalog'
+import { Picture } from '../components/Picture'
 import { Button, Card, useTitle } from '../components/ui'
 import { useApp } from '../context/AppContext'
+import { careerArt } from '../data/art'
 
 export function Profile() {
   const { state, view, resetStudent, regenerateRoadmap, mode } = useApp()
@@ -17,7 +19,8 @@ export function Profile() {
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan">Profile</p>
         <h1 className="mt-2 text-4xl font-semibold">{profile.name}</h1>
-        <p className="mt-2 max-w-2xl text-muted">
+        <Picture src={careerArt[profile.career].src} alt={careerArt[profile.career].alt} className="mt-4 h-44 w-full max-w-md rounded-[1.5rem] object-cover" />
+        <p className="mt-4 max-w-2xl text-muted">
           {profile.isDemo ? 'This is the fictional demo student. Reset demo in the header restores her sample record.' : 'This profile lives in this browser. Clearing it does not affect the demo student.'}
         </p>
       </div>

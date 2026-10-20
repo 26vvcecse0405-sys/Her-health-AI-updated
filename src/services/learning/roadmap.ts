@@ -77,7 +77,7 @@ export function assembleRoadmap(profile: StudentProfile, bySkill: ScoredAttempt[
 
   const capstone = capstones.find((item) => item.career === profile.career)
   if (capstone) {
-    const last = chosen[chosen.length - 1]
+    const last = [...chosen].reverse().find((task) => task.skillId === capstone.skillId)
     chosen.push({
       id: `capstone-${capstone.career}`,
       skillId: capstone.skillId,

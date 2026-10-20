@@ -185,7 +185,7 @@ body::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn, .skeleton, .marquee-track, .float-card {
+  .btn, .skeleton, .marquee-track, .float-card, .float, .knowledge-bg {
     animation: none;
     transition: none;
   }
@@ -275,15 +275,4 @@ h1, h2, h3 {
 @keyframes drift {
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(-24px, 12px, 0); }
-}
-
-@keyframes floaty {
-  50% { transform: translateY(-8px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .knowledge-bg,
-  .float {
-    animation: none;
-  }
 }

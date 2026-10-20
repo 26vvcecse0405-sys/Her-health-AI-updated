@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Logo'
+import { Picture } from '../components/Picture'
 import { Button, useTitle } from '../components/ui'
 import { homeFor, useApp } from '../context/AppContext'
+import { scenes } from '../data/art'
 
 export function SignIn() {
   const { student, beginStudent, beginDemo } = useApp()
@@ -10,7 +12,8 @@ export function SignIn() {
   const saved = Boolean(student.profile)
 
   return (
-    <main className="mx-auto grid max-w-xl gap-6 px-4 py-10">
+    <main className="mx-auto grid max-w-5xl items-center gap-8 px-4 py-10 lg:grid-cols-2">
+      <div className="grid gap-6">
       <Logo />
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan">This browser</p>
@@ -31,6 +34,8 @@ export function SignIn() {
           <Button variant="ghost" onClick={() => { beginDemo(); navigate('/dashboard') }}>Try Live Demo</Button>
         </div>
       </section>
+      </div>
+      <Picture src={scenes.hero.src} alt={scenes.hero.alt} eager className="w-full rounded-[1.75rem] border border-line" />
     </main>
   )
 }

@@ -1,299 +1,299 @@
-import { useState } from 'react'
-import { Button, Card, Field, Kicker, useTitle } from '../components/ui'
-import { useApp } from '../context/AppContext'
+import { useEffect, useState } from 'react'
+import { scenes } from '../data/art'
 import { difficultyLabels, skillById, skills } from '../data/catalog'
+import { EmptyState } from '../components/EmptyState'
+import { Picture } from '../components/Picture'
+import { Button, Meter, cx, useTitle } from '../components/ui'
+import { useApp } from '../context/AppContext'
 import { requestPractice } from '../services/ai/client'
 import { uid } from '../services/learning/time'
 import { localCards, localQuiz } from '../services/practice/generate'
-import type { Difficulty, QuizQuestion, SkillId } from '../types'
+import { difficulties, type ContentSource, type Difficulty, type Flashcard, type QuizQuestion, type SkillId } from '../types'
 
-type Tab = 'quiz' | 'cards' | 'revision'
-
-function gradeQuiz(questions: QuizQuestion[], answers: number[]) {
-  const correct = questions.filter((question, index) => answers[index] === question.correctIndex).length
-  return { correct, total: questions.length, percent: questions.length === 0 ? 0 : Math.round((correct / questions.length) * 100) }
-}
+const tabs = ['Quiz', 'Flashcards', 'Revision'] as const
 
 export function Studio() {
-  const { state, aiOn, saveQuizAttempt, clearMiss, saveFlashcards, markCard } = useApp()
-  const [tab, setTab] = useState<Tab>('quiz')
-  const [skillId, setSkillId] = useState<SkillId>(state.profile?.career === 'consulting' ? 'communication' : 'data')
+  const { state, view, saveQuizAttempt, saveFlashcards, markCard, clearMiss } = useApp()
+  const [tab, setTab] = useState<(typeof tabs)[number]>('Quiz')
+  const [skillId, setSkillId] = useState<SkillId>(view.developing[0]?.skillId ?? 'data')
   const [difficulty, setDifficulty] = useState<Difficulty>('foundation')
-  const [count, setCount] = useState(5)
+  const [topic, setTopic] = useState(view.nextTask?.title ?? 'Core practice')
   const [focus, setFocus] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [pending, setPending] = useState(false)
   const [note, setNote] = useState('')
-  const [source, setSource] = useState<'local' | 'openai'>('local')
-  const [questions, setQuestions] = useState<QuizQuestion[] | null>(null)
-  const [cursor, setCursor] = useState(0)
+  const [error, setError] = useState('')
+  const [quiz, setQuiz] = useState<QuizQuestion[] | null>(null)
+  const [source, setSource] = useState<ContentSource>('local')
+  const [index, setIndex] = useState(0)
   const [answers, setAnswers] = useState<number[]>([])
-  const [picked, setPicked] = useState<number | null>(null)
-  const [revealed, setRevealed] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [finished, setFinished] = useState(false)
   const [cardIndex, setCardIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
-  const [missChoice, setMissChoice] = useState<number | null>(null)
-  const [missNote, setMissNote] = useState('')
-  useTitle('Practice studio')
+  const [revisionChoice, setRevisionChoice] = useState<Record<string, number>>({})
+  const [revisionNote, setRevisionNote] = useState('')
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({})
+  useTitle('Studio')
 
-  const question = questions?.[cursor]
-  const finished = Boolean(questions && saved)
-  const grade = questions && saved ? gradeQuiz(questions, answers) : null
-  const card = state.flashcards[cardIndex]
+  const card = state.flashcards[Math.min(cardIndex, Math.max(state.flashcards.length - 1, 0))]
 
-  async function generateQuiz() {
-    setLoading(true)
-    setError('')
-    setQuestions(null)
-    setSaved(false)
-    const topic = skillById[skillId].label
-    const live = await requestPractice({ kind: 'quiz', topic, focus, skillId, difficulty, count })
-    const liveQuestions = live.quiz?.questions ?? []
-    if (live.source === 'openai' && liveQuestions.length === count) {
-      setQuestions(liveQuestions.map((item, index) => ({
-        id: `live-${index}`,
-        prompt: item.prompt,
-        options: item.options,
-        correctIndex: item.correctIndex,
-        explanation: item.explanation,
-        skillId,
-        difficulty,
-      })))
-      setSource('openai')
-      setNote('Live model quiz. Each question was checked for four distinct options and a correct-answer index before it was shown.')
-    } else {
-      const local = localQuiz({ skillId, difficulty, count, focus, topic })
-      if (!local.questions.length) {
-        setError('The question bank has nothing for that skill.')
-        setLoading(false)
-        return
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      const target = event.target
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
+      if (tab === 'Flashcards' && card) {
+        if (event.key === 'ArrowRight') setCardIndex((value) => Math.min(state.flashcards.length - 1, value + 1))
+        if (event.key === 'ArrowLeft') setCardIndex((value) => Math.max(0, value - 1))
+        if (event.key === ' ') {
+          event.preventDefault()
+          setFlipped((value) => !value)
+        }
       }
-      setQuestions(local.questions)
-      setSource('local')
-      setNote(live.error ? `${live.error} Showing the local question bank instead.` : local.note)
+      if (tab === 'Quiz' && quiz && !finished) {
+        const choice = Number(event.key) - 1
+        const question = quiz[index]
+        if (question && choice >= 0 && choice < question.options.length) {
+          setAnswers((current) => {
+            const next = [...current]
+            next[index] = choice
+            return next
+          })
+        }
+      }
     }
-    setCursor(0)
-    setAnswers([])
-    setPicked(null)
-    setRevealed(false)
-    setLoading(false)
-  }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [tab, card, quiz, finished, index, state.flashcards.length])
 
-  function reveal() {
-    if (picked === null || !question) {
-      setError('Choose an answer first.')
+  async function generate(kind: 'quiz' | 'cards') {
+    if (topic.trim().length < 2) {
+      setError('Add a topic of at least 2 characters.')
       return
     }
+    setPending(true)
     setError('')
-    setAnswers((current) => {
-      const next = [...current]
-      next[cursor] = picked
-      return next
-    })
-    setRevealed(true)
+    const remote = await requestPractice({ kind, skillId, difficulty, topic: topic.trim(), focus: focus.trim(), count: 5 })
+    if (kind === 'quiz') {
+      if (remote.source === 'openai' && remote.quiz) {
+        setQuiz(remote.quiz.questions.map((item, itemIndex) => ({
+          id: `live-${itemIndex}-${uid()}`,
+          prompt: item.prompt,
+          options: item.options,
+          correctIndex: item.correctIndex,
+          explanation: item.explanation,
+          skillId,
+          difficulty,
+        })))
+        setSource('openai')
+        setNote('Live model. The key stayed on the server.')
+      } else {
+        const local = localQuiz({ skillId, difficulty, topic: topic.trim(), focus: focus.trim(), count: 5 })
+        setQuiz(local.questions)
+        setSource('local')
+        setNote(remote.error ? `${remote.error} ${local.note}` : local.note)
+      }
+      setIndex(0)
+      setAnswers([])
+      setFinished(false)
+    } else if (remote.source === 'openai' && remote.cards) {
+      const cards: Flashcard[] = remote.cards.cards.map((item) => ({
+        id: uid(),
+        skillId,
+        front: item.front,
+        back: item.back,
+        known: false,
+        source: 'openai',
+      }))
+      saveFlashcards(cards)
+      setSource('openai')
+      setNote('Live model flashcards. The key stayed on the server.')
+      setCardIndex(0)
+      setFlipped(false)
+    } else {
+      const local = localCards({ skillId, difficulty, topic: topic.trim(), focus: focus.trim() })
+      saveFlashcards(local.cards)
+      setSource('local')
+      setNote(remote.error ? `${remote.error} ${local.note}` : local.note)
+      setCardIndex(0)
+      setFlipped(false)
+    }
+    setPending(false)
   }
 
-  function advance() {
-    if (!questions || !revealed) return
-    if (cursor < questions.length - 1) {
-      setCursor(cursor + 1)
-      setPicked(null)
-      setRevealed(false)
+  function finish() {
+    if (!quiz || answers.length !== quiz.length || answers.some((answer) => answer === undefined)) {
+      setError('Answer every question before scoring.')
       return
     }
-    const finalAnswers = answers.map((answer, index) => (index === cursor ? (picked ?? answer) : answer))
     saveQuizAttempt({
       id: uid(),
-      topic: skillById[skillId].label,
-      focus,
+      topic: topic.trim(),
+      focus: focus.trim(),
       skillId,
       difficulty,
       at: new Date().toISOString(),
       source,
       sourceNote: note,
-      questions,
-      answers: finalAnswers,
+      questions: quiz,
+      answers,
     })
-    setAnswers(finalAnswers)
-    setSaved(true)
-  }
-
-  async function generateCards() {
-    setLoading(true)
+    setFinished(true)
     setError('')
-    const topic = skillById[skillId].label
-    const live = await requestPractice({ kind: 'cards', topic, skillId, difficulty, count: 6 })
-    const liveCards = live.cards?.cards ?? []
-    if (live.source === 'openai' && liveCards.length === 6) {
-      saveFlashcards(
-        liveCards.map((item) => ({
-          id: uid(),
-          skillId,
-          front: item.front,
-          back: item.back,
-          known: false,
-          source: 'openai' as const,
-        })),
-      )
-      setNote('Live model flashcards. Front and back were checked before they replaced the deck.')
-    } else {
-      const local = localCards({ skillId, difficulty, topic, focus })
-      saveFlashcards(local.cards)
-      setNote(live.error ? `${live.error} Showing local cards instead.` : local.note)
-    }
-    setCardIndex(0)
-    setFlipped(false)
-    setLoading(false)
-    setTab('cards')
   }
 
-  function submitMiss(missedId: string) {
-    if (missChoice === null) {
-      setMissNote('Choose an answer.')
-      return
-    }
-    const ok = clearMiss(missedId, missChoice)
-    setMissNote(ok ? 'Correct. Removed from the revision list.' : 'Still not the keyed answer. The explanation is under the choices.')
-    if (ok) setMissChoice(null)
-  }
+  const question = quiz?.[index]
+  const correct = quiz ? quiz.filter((item, itemIndex) => answers[itemIndex] === item.correctIndex).length : 0
 
   return (
     <div className="grid gap-5">
-      <div>
-        <Kicker>Practice studio</Kicker>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Quizzes, cards, and revision</h1>
-        <p className="mt-2 max-w-3xl text-muted">
-          {aiOn ? 'A server key is configured. Model output is shown only after it matches the schema.' : 'AI demo mode. Quizzes and cards come from the local bank and are labelled as such.'}
-        </p>
+      <div className="grid items-center gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan">AI learning studio</p>
+          <h1 className="mt-2 text-4xl font-semibold">Practice with a labelled source.</h1>
+          <p className="mt-2 max-w-2xl text-muted">Generate a quiz, flip flashcards, or revise a miss. A live model is used only when the server accepts the reply. Otherwise you get the local bank, and the label says so.</p>
+        </div>
+        <Picture src={scenes.companion.src} alt={scenes.companion.alt} className="w-full rounded-[1.5rem]" />
       </div>
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Practice modes">
-        {([
-          ['quiz', 'Quiz'],
-          ['cards', 'Flashcards'],
-          ['revision', 'Revision'],
-        ] as const).map(([id, label]) => (
-          <button key={id} type="button" role="tab" aria-selected={tab === id} className="chip" onClick={() => setTab(id)}>
-            {label}
-          </button>
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Studio">
+        {tabs.map((item) => (
+          <button key={item} type="button" className="chip" role="tab" aria-selected={tab === item} onClick={() => setTab(item)}>{item}</button>
         ))}
       </div>
+      <section className="glass grid gap-4 p-4 md:grid-cols-2">
+        <label className="grid gap-2 text-sm font-medium">Topic
+          <input className="field" value={topic} maxLength={120} onChange={(event) => setTopic(event.target.value)} />
+        </label>
+        <label className="grid gap-2 text-sm font-medium">Focus <span className="font-normal text-muted">(optional)</span>
+          <input className="field" value={focus} maxLength={200} onChange={(event) => setFocus(event.target.value)} />
+        </label>
+        <div className="flex flex-wrap gap-2" aria-label="Skill">
+          {skills.map((skill) => (
+            <button key={skill.id} type="button" className="chip" aria-pressed={skillId === skill.id} onClick={() => setSkillId(skill.id)}>{skill.label}</button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2" aria-label="Difficulty">
+          {difficulties.map((item) => (
+            <button key={item} type="button" className="chip" aria-pressed={difficulty === item} onClick={() => setDifficulty(item)}>{difficultyLabels[item]}</button>
+          ))}
+        </div>
+      </section>
+      {error ? <p className="text-sm text-bad" role="alert">{error}</p> : null}
+      {note ? <p className="text-sm text-muted">{source === 'openai' ? 'Live model. ' : 'Local bank. '}{note}</p> : null}
+      {pending ? <div className="skeleton h-40" aria-label="Generating practice" /> : null}
 
-      {tab !== 'revision' ? (
-        <Card>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Topic">
-              <select className="field" value={skillId} onChange={(event) => setSkillId(event.target.value as SkillId)}>
-                {skills.map((skill) => <option key={skill.id} value={skill.id}>{skill.label}</option>)}
-              </select>
-            </Field>
-            <Field label="Difficulty">
-              <select className="field" value={difficulty} onChange={(event) => setDifficulty(event.target.value as Difficulty)}>
-                {Object.entries(difficultyLabels).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
-              </select>
-            </Field>
-            {tab === 'quiz' ? (
-              <Field label="Number of questions">
-                <select className="field" value={count} onChange={(event) => setCount(Number(event.target.value))}>
-                  {[3, 4, 5].map((value) => <option key={value} value={value}>{value}</option>)}
-                </select>
-              </Field>
-            ) : null}
-            <Field label="Optional focus" hint="Used to prefer matching local questions, or sent with a live request.">
-              <input className="field" value={focus} maxLength={80} onChange={(event) => setFocus(event.target.value)} />
-            </Field>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {tab === 'quiz' ? <Button onClick={() => void generateQuiz()} disabled={loading}>{loading ? 'Generating…' : 'Generate quiz'}</Button> : null}
-            <Button variant={tab === 'cards' ? 'primary' : 'ghost'} onClick={() => void generateCards()} disabled={loading}>
-              {loading && tab === 'cards' ? 'Generating…' : 'Generate flashcards'}
-            </Button>
-          </div>
-          {error ? <p className="mt-3 text-sm text-bad" role="alert">{error}</p> : null}
-          {note ? <p className="mt-3 text-sm text-muted">{note}</p> : null}
-        </Card>
-      ) : null}
-
-      {tab === 'quiz' && loading ? <div className="skeleton h-56" /> : null}
-      {tab === 'quiz' && question && !finished ? (
-        <Card>
-          <p className="text-sm text-muted">Question {cursor + 1} of {questions?.length} · {source === 'openai' ? 'Live model' : 'Local bank'}</p>
-          <h2 className="mt-3 text-2xl font-semibold leading-snug">{question.prompt}</h2>
-          <div className="mt-4 grid gap-2" role="radiogroup" aria-label="Choices">
-            {question.options.map((option, index) => (
-              <button key={option} type="button" role="radio" aria-checked={picked === index} className="chip text-left" onClick={() => setPicked(index)} disabled={revealed}>
-                <span className="mr-2 font-semibold text-cyan">{String.fromCharCode(65 + index)}</span>
-                {option}
-              </button>
-            ))}
-          </div>
-          {revealed ? (
-            <p className="mt-4 text-sm leading-6 text-muted">
-              {picked === question.correctIndex ? 'Correct.' : `The keyed answer is ${question.options[question.correctIndex]}.`} {question.explanation}
-            </p>
+      {tab === 'Quiz' ? (
+        <section className="glass p-5">
+          {!quiz ? (
+            <>
+              <EmptyState kind="empty" title="No quiz yet" text="Choose a skill and generate five questions. The score uses the answers you submit." />
+              <Button onClick={() => void generate('quiz')}>Generate quiz</Button>
+            </>
           ) : null}
-          <div className="mt-4">
-            {revealed ? <Button onClick={advance}>{cursor === (questions?.length ?? 1) - 1 ? 'Finish and score' : 'Next question'}</Button> : <Button onClick={reveal}>Check answer</Button>}
-          </div>
-        </Card>
-      ) : null}
-      {tab === 'quiz' && finished && grade ? (
-        <Card>
-          <h2 className="text-2xl font-semibold">{grade.correct} of {grade.total} correct · {grade.percent}%</h2>
-          <p className="mt-2 text-sm text-muted">Saved to this browser. Missed questions are waiting in Revision.</p>
-          <Button className="mt-4" variant="ghost" onClick={() => { setQuestions(null); setSaved(false); setNote('') }}>Start another</Button>
-        </Card>
-      ) : null}
-
-      {tab === 'cards' ? (
-        state.flashcards.length === 0 ? (
-          <Card><p className="text-muted">No deck yet. Generate flashcards for a topic.</p></Card>
-        ) : card ? (
-          <Card>
-            <p className="text-sm text-muted">Card {cardIndex + 1} of {state.flashcards.length} · {card.source === 'openai' ? 'Live model' : 'Local bank'} · {card.known ? 'Marked known' : 'Still learning'}</p>
-            <button type="button" className="mt-4 w-full text-left" onClick={() => setFlipped(!flipped)} aria-pressed={flipped}>
-              <div className={`flip relative min-h-48 ${flipped ? 'on' : ''}`}>
-                <div className="flip-face glass absolute inset-0 grid place-items-center p-6">
-                  <p className="text-xl font-semibold">{card.front}</p>
-                </div>
-                <div className="flip-face flip-back glass absolute inset-0 grid place-items-center p-6">
-                  <p className="text-lg leading-7">{card.back}</p>
-                </div>
+          {quiz && question && !finished ? (
+            <>
+              <div className="flex items-center justify-between gap-3 text-sm text-muted">
+                <span>Question {index + 1} of {quiz.length}</span>
+                <span>{skillById[question.skillId].label}</span>
               </div>
-            </button>
-            <p className="mt-3 text-sm text-muted">Click the card to flip it.</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="ghost" onClick={() => markCard(card.id, true)}>I know this</Button>
-              <Button variant="ghost" onClick={() => markCard(card.id, false)}>Still learning</Button>
-              <Button variant="quiet" disabled={cardIndex === 0} onClick={() => { setCardIndex(cardIndex - 1); setFlipped(false) }}>Previous</Button>
-              <Button variant="quiet" disabled={cardIndex === state.flashcards.length - 1} onClick={() => { setCardIndex(cardIndex + 1); setFlipped(false) }}>Next</Button>
+              <Meter value={((index + (answers[index] === undefined ? 0 : 1)) / quiz.length) * 100} />
+              <h2 className="mt-4 text-2xl font-semibold">{question.prompt}</h2>
+              <div className="mt-4 grid gap-2" role="radiogroup" aria-label="Answers">
+                {question.options.map((option, optionIndex) => (
+                  <button key={option} type="button" role="radio" aria-checked={answers[index] === optionIndex} className="chip text-left" onClick={() => setAnswers((current) => { const next = [...current]; next[index] = optionIndex; return next })}>
+                    <span className="mr-2 font-semibold text-cyan">{optionIndex + 1}</span>{option}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-muted">Keys 1–4 select an answer. The explanation appears after you score the quiz.</p>
+              <div className="mt-4 flex justify-between gap-3">
+                <Button variant="ghost" disabled={index === 0} onClick={() => setIndex(index - 1)}>Previous</Button>
+                {index === quiz.length - 1 ? <Button onClick={finish}>Score quiz</Button> : <Button onClick={() => setIndex(index + 1)}>Next</Button>}
+              </div>
+            </>
+          ) : null}
+          {quiz && finished ? (
+            <div>
+              <h2 className="text-3xl font-semibold">{correct} of {quiz.length} correct · {Math.round((correct / quiz.length) * 100)}%</h2>
+              <p className="mt-2 text-sm text-muted">{skillById[skillId].label} accuracy on this quiz: {Math.round((correct / quiz.length) * 100)}%. Misses were added to Revision.</p>
+              <ul className="mt-4 grid gap-4">
+                {quiz.map((item, itemIndex) => {
+                  const right = answers[itemIndex] === item.correctIndex
+                  return (
+                    <li key={item.id}>
+                      <p className="font-medium">{item.prompt}</p>
+                      <p className={cx('mt-1 text-sm', right ? 'text-good' : 'text-bad')}>{right ? 'Correct' : `Your answer: ${item.options[answers[itemIndex] ?? 0]}. Keyed answer: ${item.options[item.correctIndex]}.`}</p>
+                      <p className="text-sm text-muted">{item.explanation}</p>
+                    </li>
+                  )
+                })}
+              </ul>
+              <Button className="mt-4" variant="ghost" onClick={() => void generate('quiz')}>Generate another</Button>
             </div>
-          </Card>
-        ) : null
+          ) : null}
+        </section>
       ) : null}
 
-      {tab === 'revision' ? (
-        state.missed.length === 0 ? (
-          <Card><p className="text-muted">No missed questions. They appear here after a quiz answer does not match the key.</p></Card>
-        ) : (
-          <div className="grid gap-4">
-            {state.missed.map((miss) => (
-              <Card key={miss.id}>
-                <p className="text-xs uppercase tracking-[0.14em] text-muted">{miss.topic}</p>
-                <h2 className="mt-2 text-xl font-semibold">{miss.question.prompt}</h2>
-                <div className="mt-3 grid gap-2">
-                  {miss.question.options.map((option, index) => (
-                    <button key={option} type="button" className="chip text-left" aria-pressed={missChoice === index} onClick={() => setMissChoice(index)}>
-                      {option}
-                    </button>
-                  ))}
-                </div>
-                <Button className="mt-4" onClick={() => submitMiss(miss.id)}>Check revision</Button>
-                {missNote ? <p className="mt-3 text-sm text-muted">{missNote} {miss.question.explanation}</p> : null}
-              </Card>
-            ))}
-          </div>
-        )
+      {tab === 'Flashcards' ? (
+        <section className="glass p-5">
+          {state.flashcards.length === 0 || !card ? (
+            <>
+              <EmptyState kind="empty" title="No flashcards yet" text="Generate six cards. Space flips a card. Arrow keys move." />
+              <Button onClick={() => void generate('cards')}>Generate flashcards</Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted">Card {Math.min(cardIndex, state.flashcards.length - 1) + 1} of {state.flashcards.length} · {card.known ? 'Known' : 'Still reviewing'} · {card.source === 'openai' ? 'Live model' : 'Local bank'}</p>
+              <div className="flip-scene mx-auto mt-4 h-64 max-w-xl">
+                <button type="button" className={cx('flip relative h-full w-full text-left', flipped && 'on')} aria-pressed={flipped} onClick={() => setFlipped((value) => !value)}>
+                  <span className="flip-face glass absolute inset-0 grid place-items-center p-6 text-xl font-semibold">{card.front}</span>
+                  <span className="flip-back glass absolute inset-0 grid place-items-center p-6 text-lg">{card.back}</span>
+                </button>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button variant="ghost" onClick={() => { setCardIndex((value) => Math.max(0, value - 1)); setFlipped(false) }}>Previous</Button>
+                <Button variant="ghost" onClick={() => { setCardIndex((value) => Math.min(state.flashcards.length - 1, value + 1)); setFlipped(false) }}>Next</Button>
+                <Button onClick={() => markCard(card.id, true)}>Mark known</Button>
+                <Button variant="ghost" onClick={() => markCard(card.id, false)}>Keep reviewing</Button>
+                <Button variant="ghost" onClick={() => void generate('cards')}>New deck</Button>
+              </div>
+            </>
+          )}
+        </section>
+      ) : null}
+
+      {tab === 'Revision' ? (
+        <section className="glass p-5">
+          {state.missed.length === 0 ? (
+            <EmptyState kind="success" title="No misses waiting" text="Incorrect quiz answers land here. A correct revision removes that item." />
+          ) : (
+            <ul className="grid gap-4">
+              {state.missed.map((miss) => (
+                <li key={miss.id} className="rounded-2xl border border-line p-4">
+                  <p className="text-xs text-muted">{miss.topic} · {skillById[miss.question.skillId].label}</p>
+                  <h2 className="mt-1 text-lg font-semibold">{miss.question.prompt}</h2>
+                  <div className="mt-3 grid gap-2">
+                    {miss.question.options.map((option, optionIndex) => (
+                      <button key={option} type="button" className="chip text-left" aria-pressed={revisionChoice[miss.id] === optionIndex} onClick={() => setRevisionChoice({ ...revisionChoice, [miss.id]: optionIndex })}>
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                  <Button className="mt-3" onClick={() => {
+                    const choice = revisionChoice[miss.id]
+                    if (choice === undefined) {
+                      setRevisionNote('Choose an answer first.')
+                      return
+                    }
+                    const cleared = clearMiss(miss.id, choice)
+                    setRevealed((current) => ({ ...current, [miss.id]: true }))
+                    setRevisionNote(cleared ? 'Cleared. The answer matched the key.' : 'Not yet. The explanation is open now.')
+                  }}>Check revision</Button>
+                  {revealed[miss.id] ? <p className="mt-2 text-sm text-muted">{miss.question.explanation}</p> : null}
+                </li>
+              ))}
+            </ul>
+          )}
+          {revisionNote ? <p className="mt-3 text-sm text-muted" role="status">{revisionNote}</p> : null}
+        </section>
       ) : null}
     </div>
   )

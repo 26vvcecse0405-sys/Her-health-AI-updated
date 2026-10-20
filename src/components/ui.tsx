@@ -26,8 +26,8 @@ export function Button({ to, variant = 'primary', className, children, type = 'b
   )
 }
 
-export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <section className={cx('glass p-5 md:p-6', className)}>{children}</section>
+export function Card({ children, className, id }: { children: ReactNode; className?: string; id?: string }) {
+  return <section id={id} className={cx('glass p-5 md:p-6', className)}>{children}</section>
 }
 
 export function Kicker({ children }: { children: ReactNode }) {

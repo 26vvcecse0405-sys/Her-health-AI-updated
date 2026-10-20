@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { assessmentQuestions } from '../data/assessmentBank'
 import { difficultyLabels, skillById } from '../data/catalog'
 import { Logo } from '../components/Logo'
+import { Picture } from '../components/Picture'
 import { Button, Meter, useTitle } from '../components/ui'
+import { scenes } from '../data/art'
 import { useApp } from '../context/AppContext'
 
 export function Assessment() {
@@ -61,7 +63,9 @@ export function Assessment() {
       </div>
       <div className="mt-4"><Meter value={(answered / assessmentQuestions.length) * 100} /></div>
       <p className="mt-2 text-sm text-muted">{answered} answered. Scores are saved only after you submit.</p>
-      <section className="glass mt-5 p-5">
+      <div className="mt-5 grid gap-4 md:grid-cols-[11rem_1fr] md:items-start">
+      <Picture src={scenes.constellation.src} alt={scenes.constellation.alt} className="h-36 w-full rounded-2xl object-cover md:h-full" />
+      <section className="glass p-5">
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="rounded-full bg-blue/15 px-2 py-1">{skillById[question.skillId].label}</span>
           <span className="rounded-full border border-line px-2 py-1 text-muted">{difficultyLabels[question.difficulty]}</span>
@@ -92,6 +96,7 @@ export function Assessment() {
           )}
         </div>
       </section>
+      </div>
       <div className="mt-4 flex flex-wrap gap-1" aria-label="Question progress">
         {assessmentQuestions.map((item, index) => (
           <button

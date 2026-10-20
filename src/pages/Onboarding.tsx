@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { careers, educationLabels, interests, skills, styleLabels } from '../data/catalog'
 import { Logo } from '../components/Logo'
+import { Picture } from '../components/Picture'
 import { Button, Field, Meter, useTitle } from '../components/ui'
+import { careerArt, scenes } from '../data/art'
 import { useApp } from '../context/AppContext'
 import { profileSchema } from '../services/persistence/schema'
 import { uid } from '../services/learning/time'
@@ -70,6 +72,11 @@ export function Onboarding() {
       <p className="mt-8 text-sm text-muted">Step {step + 1} of {steps.length}</p>
       <h1 className="mt-1 text-3xl font-semibold">{steps[step]}</h1>
       <Meter value={((step + 1) / steps.length) * 100} />
+      <Picture
+        src={step === 1 ? scenes.constellation.src : step === 4 && career ? careerArt[career].src : step === 5 ? scenes.streak.src : scenes.roadmap.src}
+        alt={step === 4 && career ? careerArt[career].alt : 'Illustration for this step of your learning profile'}
+        className="mt-6 h-44 w-full rounded-[1.5rem] border border-line object-cover"
+      />
       <section className="glass mt-6 p-5">
         {step === 0 ? (
           <div className="grid gap-4">
@@ -124,9 +131,12 @@ export function Onboarding() {
         {step === 4 ? (
           <div className="grid gap-2 sm:grid-cols-2">
             {careers.map((item) => (
-              <button key={item.id} type="button" className="chip h-full text-left" aria-pressed={career === item.id} onClick={() => setCareer(item.id)}>
-                <span className="block font-semibold">{item.label}</span>
-                <span className="mt-1 block text-sm font-normal text-muted">{item.blurb}</span>
+              <button key={item.id} type="button" className="overflow-hidden rounded-2xl border border-line bg-card/70 text-left" aria-pressed={career === item.id} onClick={() => setCareer(item.id)}>
+                <Picture src={careerArt[item.id].src} alt="" className="h-24 w-full object-cover" />
+                <span className="block p-3">
+                  <span className="block font-semibold">{item.label}</span>
+                  <span className="mt-1 block text-sm font-normal text-muted">{item.blurb}</span>
+                </span>
               </button>
             ))}
           </div>

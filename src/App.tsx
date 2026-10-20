@@ -1,22 +1,23 @@
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Shell } from './components/Shell'
 import { useApp } from './context/AppContext'
-import { Achievements } from './pages/Achievements'
-import { Analytics } from './pages/Analytics'
-import { Assessment } from './pages/Assessment'
-import { Careers } from './pages/Careers'
-import { Assistant } from './pages/Assistant'
-import { Dashboard } from './pages/Dashboard'
 import { Landing } from './pages/Landing'
-import { NotFound } from './pages/NotFound'
-import { Onboarding } from './pages/Onboarding'
-import { Profile } from './pages/Profile'
-import { Results } from './pages/Results'
-import { Roadmap } from './pages/Roadmap'
-import { SignIn } from './pages/SignIn'
-import { Studio } from './pages/Studio'
+
+const Achievements = lazy(() => import('./pages/Achievements').then((module) => ({ default: module.Achievements })))
+const Analytics = lazy(() => import('./pages/Analytics').then((module) => ({ default: module.Analytics })))
+const Assessment = lazy(() => import('./pages/Assessment').then((module) => ({ default: module.Assessment })))
+const Assistant = lazy(() => import('./pages/Assistant').then((module) => ({ default: module.Assistant })))
+const Careers = lazy(() => import('./pages/Careers').then((module) => ({ default: module.Careers })))
+const Dashboard = lazy(() => import('./pages/Dashboard').then((module) => ({ default: module.Dashboard })))
+const NotFound = lazy(() => import('./pages/NotFound').then((module) => ({ default: module.NotFound })))
+const Onboarding = lazy(() => import('./pages/Onboarding').then((module) => ({ default: module.Onboarding })))
+const Profile = lazy(() => import('./pages/Profile').then((module) => ({ default: module.Profile })))
+const Results = lazy(() => import('./pages/Results').then((module) => ({ default: module.Results })))
+const Roadmap = lazy(() => import('./pages/Roadmap').then((module) => ({ default: module.Roadmap })))
+const SignIn = lazy(() => import('./pages/SignIn').then((module) => ({ default: module.SignIn })))
+const Studio = lazy(() => import('./pages/Studio').then((module) => ({ default: module.Studio })))
 
 function Gate({ children, assessed = false }: { children: ReactNode; assessed?: boolean }) {
   const { state } = useApp()
@@ -28,6 +29,7 @@ function Gate({ children, assessed = false }: { children: ReactNode; assessed?: 
 export function App() {
   return (
     <ErrorBoundary>
+      <Suspense fallback={<div className="skeleton mx-auto mt-16 h-64 max-w-3xl" aria-label="Loading" />}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/signin" element={<SignIn />} />
@@ -46,6 +48,7 @@ export function App() {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
     </ErrorBoundary>
   )
 }

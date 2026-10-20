@@ -1,83 +1,73 @@
-import { Check } from 'lucide-react'
-import { Button, Card, Kicker, Meter, useTitle } from '../components/ui'
-import { useApp } from '../context/AppContext'
 import { scenes } from '../data/art'
-import { difficultyLabels, skillById } from '../data/catalog'
+import { careerById, difficultyLabels, skillById } from '../data/catalog'
+import { EmptyState } from '../components/EmptyState'
+import { Picture } from '../components/Picture'
+import { Button, Card, useTitle } from '../components/ui'
+import { useApp } from '../context/AppContext'
+import { prerequisiteMet } from '../services/learning/roadmap'
 
 export function Roadmap() {
   const { state, view, toggleRoadmapTask, regenerateRoadmap } = useApp()
   useTitle('Roadmap')
   const roadmap = state.roadmap
-  if (!roadmap || !state.profile) return null
+  const profile = state.profile
+  if (!roadmap || !profile) {
+    return <EmptyState kind="empty" title="No roadmap yet" text="Submit the assessment and SkillSprint will build a plan from the gaps." />
+  }
+  const planned = view.tasks.reduce((sum, task) => sum + task.minutes, 0)
+  const doneIds = new Set(view.done.map((task) => task.id))
 
   return (
     <div className="grid gap-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="grid items-center gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <div>
-          <Kicker>Personalized roadmap</Kicker>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Your sprint path</h1>
-          <p className="mt-2 max-w-3xl text-muted">{roadmap.narrative}</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan">Roadmap · {careerById[profile.career].label}</p>
+          <h1 className="mt-2 text-4xl font-semibold">A path built from the gaps.</h1>
+          <p className="mt-3 max-w-2xl leading-7 text-muted">{roadmap.narrative}</p>
         </div>
-        <div className="grid w-full max-w-sm gap-3">
-          <img src={scenes.roadmap.src} alt={scenes.roadmap.alt} className="aspect-[16/9] w-full rounded-3xl border border-line object-cover" />
-          <div className="flex flex-wrap gap-2">
-            <Button to="/profile" variant="ghost">Adjust goals</Button>
-            <Button onClick={regenerateRoadmap}>Regenerate plan</Button>
-          </div>
-        </div>
+        <Picture src={scenes.roadmap.src} alt={scenes.roadmap.alt} className="w-full rounded-[1.5rem]" />
       </div>
       <Card>
         <p className="text-sm leading-6 text-muted">{roadmap.methodNote}</p>
-        <div className="mt-4 flex flex-wrap items-center gap-4">
-          <p className="text-sm text-muted">{view.done.length} of {view.tasks.length} tasks done · budget {roadmap.budgetMinutes} minutes</p>
-          <div className="min-w-40 flex-1"><Meter value={view.progress} /></div>
-        </div>
+        <p className="mt-2 text-sm text-muted">{planned} minutes scheduled · {roadmap.budgetMinutes} minutes budgeted · {view.progress}% complete</p>
+        <Button className="mt-4" variant="ghost" onClick={() => regenerateRoadmap()}>Rebuild from latest scores</Button>
       </Card>
+      {view.tasks.length === 0 ? <EmptyState kind="empty" title="Nothing to schedule" text="Change the career target or retake the assessment to generate tasks." /> : null}
       <ol className="timeline">
         {roadmap.phases.map((phase) => {
-          const done = phase.tasks.filter((task) => state.taskCompletedAt[task.id]).length
-          const complete = phase.tasks.length > 0 && done === phase.tasks.length
+          const phaseDone = phase.tasks.every((task) => doneIds.has(task.id))
+          const current = phase.tasks.some((task) => task.id === view.nextTask?.id)
           return (
             <li key={phase.id} className="relative pl-12">
-              <span className={`absolute left-2 top-5 grid h-7 w-7 place-items-center rounded-full text-xs font-semibold ${complete ? 'bg-good text-canvas' : 'bg-blue text-white'}`} aria-hidden="true">
-                {complete ? <Check size={14} /> : done}
-              </span>
+              <span className={`absolute left-2 top-2 h-4 w-4 rounded-full ${phaseDone ? 'bg-good' : current ? 'bg-cyan' : 'bg-line'}`} />
               <Card>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan">{complete ? 'Completed' : done > 0 ? 'In progress' : 'Upcoming'}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan">{phaseDone ? 'Completed' : current ? 'Current' : 'Upcoming'}</p>
                 <h2 className="mt-1 text-2xl font-semibold">{phase.title}</h2>
                 <p className="mt-1 text-sm text-muted">{phase.summary}</p>
                 <p className="mt-2 text-sm font-medium">Milestone: {phase.milestone}</p>
                 <ul className="mt-4 grid gap-3">
                   {phase.tasks.map((task) => {
-                    const checked = Boolean(state.taskCompletedAt[task.id])
-                    const current = view.nextTask?.id === task.id
+                    const complete = Boolean(state.taskCompletedAt[task.id])
+                    const open = prerequisiteMet(task, view.tasks, state.taskCompletedAt)
                     return (
-                      <li key={task.id} className={`rounded-2xl border p-4 ${checked ? 'border-good/40 bg-good/10' : current ? 'border-cyan/50' : 'border-line'}`}>
+                      <li key={task.id} className="rounded-2xl border border-line p-4">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
-                            <p className="text-xs uppercase tracking-[0.14em] text-muted">
-                              {checked ? 'Completed' : current ? 'Current' : 'Upcoming'} · {skillById[task.skillId].label}
-                            </p>
-                            <h3 className="mt-1 text-lg font-semibold">{task.title}</h3>
+                            <h3 className="font-semibold">{task.title}</h3>
+                            <p className="mt-1 text-sm text-muted">{skillById[task.skillId].label} · {difficultyLabels[task.difficulty]} · {task.minutes} min</p>
                           </div>
-                          <button
-                            type="button"
-                            className="chip"
-                            aria-pressed={checked}
+                          <Button
+                            variant={complete ? 'ghost' : 'primary'}
+                            disabled={!complete && !open}
                             onClick={() => toggleRoadmapTask(task.id)}
                           >
-                            {checked ? 'Mark open' : 'Mark complete'}
-                          </button>
+                            {complete ? 'Mark not done' : open ? 'Mark complete' : 'Locked'}
+                          </Button>
                         </div>
-                        <p className="mt-2 text-sm leading-6 text-muted">{task.summary}</p>
-                        <p className="mt-2 text-sm text-muted">
-                          {task.minutes} min · {difficultyLabels[task.difficulty]}
-                          {task.prerequisite ? ` · Prerequisite: ${task.prerequisite}` : ''}
-                        </p>
+                        <p className="mt-3 text-sm leading-6 text-muted">{task.summary}</p>
+                        {!open && !complete ? <p className="mt-2 text-sm text-warn">Finish the previous task in this skill before starting this one.</p> : null}
                         <p className="mt-2 text-sm leading-6 text-muted">{task.reason}</p>
-                        <a className="mt-2 inline-flex text-sm font-medium text-cyan underline-offset-4 hover:underline" href={task.href} target="_blank" rel="noreferrer">
-                          {task.resource}
-                        </a>
+                        <a className="mt-3 inline-flex text-sm font-semibold text-cyan" href={task.href} target="_blank" rel="noreferrer">{task.resource}</a>
                       </li>
                     )
                   })}
@@ -87,6 +77,7 @@ export function Roadmap() {
           )
         })}
       </ol>
+      {view.progress === 100 ? <EmptyState kind="success" title="This plan is complete" text="Retake the assessment or change the career target if you want a new set of gaps." /> : null}
     </div>
   )
 }

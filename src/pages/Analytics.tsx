@@ -52,7 +52,7 @@ export function Analytics() {
       </div>
       <Card>
         <h2 className="text-xl font-semibold">Demonstrated score against the career target</h2>
-        <p className="mt-1 text-sm text-muted">Violet bars are the configurable target for {state.profile ? '' : ''}the selected career. They are study guidance.</p>
+        <p className="mt-1 text-sm text-muted">Violet bars are the configurable target for the selected career. They are study guidance.</p>
         <SkillCompareChart data={compare} />
       </Card>
       <Card>
