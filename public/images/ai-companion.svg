@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" width="800" height="520">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#070b18"/>
+      <stop offset="58%" stop-color="#0d1a32"/>
+      <stop offset="100%" stop-color="#1a1040"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="48%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="42%" r="48%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.38"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="520" fill="url(#sky)"/>
+  <circle cx="496" cy="197.6" r="239.20000000000002" fill="url(#glow)"/>
+  
+  <circle cx="250" cy="250" r="120" fill="#0c1730" stroke="url(#accent)" stroke-width="4"/>
+  <circle cx="210" cy="230" r="14" fill="#67e8f9"/>
+  <circle cx="290" cy="230" r="14" fill="#a78bfa"/>
+  <path d="M200 290c30 28 70 28 100 0" fill="none" stroke="#67e8f9" stroke-width="6" stroke-linecap="round"/>
+  <g transform="translate(232 300) scale(0.7)"><path d="M18 0 2 22h12l-4 20 22-28H18l0-14Z" fill="url(#accent)"/></g>
+  <rect x="430" y="120" width="300" height="70" rx="22" fill="#0c1730" stroke="#22d3ee" stroke-opacity="0.5"/>
+  <rect x="454" y="146" width="180" height="12" rx="6" fill="#67e8f9" fill-opacity="0.7"/>
+  <rect x="500" y="230" width="260" height="90" rx="22" fill="#12102a" stroke="#a78bfa" stroke-opacity="0.55"/>
+  <rect x="524" y="258" width="200" height="10" rx="5" fill="#c4b5fd" fill-opacity="0.8"/>
+  <rect x="524" y="280" width="140" height="10" rx="5" fill="#67e8f9" fill-opacity="0.55"/>
+
+</svg>

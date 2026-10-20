@@ -1,0 +1,66 @@
+import type { Difficulty, Mcq, SkillId } from '../types'
+
+function q(
+  id: string,
+  skillId: SkillId,
+  difficulty: Difficulty,
+  prompt: string,
+  options: [string, string, string, string],
+  correctIndex: 0 | 1 | 2 | 3,
+  explanation: string,
+): Mcq {
+  return { id, skillId, difficulty, prompt, options, correctIndex, explanation }
+}
+
+export const quizBank: Mcq[] = [
+  q('qp1', 'programming', 'foundation', 'A variable is best described as:', ['A fixed comment', 'A named place that holds a value', 'A keyboard shortcut', 'A type of monitor'], 1, 'A variable names a value the program can read or update.'),
+  q('qp2', 'programming', 'foundation', 'A loop is used when you need to:', ['Stop the computer', 'Repeat a step while a condition holds', 'Change the font', 'Send email'], 1, 'Loops repeat work. The condition decides when they stop.'),
+  q('qp3', 'programming', 'foundation', 'Which value is a boolean?', ['"hello"', '42', 'true', '3.14'], 2, 'true and false are boolean values. The others are text or numbers.'),
+  q('qp4', 'programming', 'intermediate', 'An off-by-one error often comes from:', ['A monitor brightness setting', 'Starting or stopping a loop one step early or late', 'Using a password manager', 'Saving a file'], 1, 'The loop bounds include or exclude one extra item.'),
+  q('qp5', 'programming', 'intermediate', 'A unit check is useful because it:', ['Replaces reading the code', 'Re-runs one expected behavior after you edit', 'Publishes the app', 'Designs the logo'], 1, 'A small check tells you whether one behavior still holds.'),
+  q('qp6', 'programming', 'advanced', 'Refactoring means:', ['Changing structure without changing the intended behavior', 'Deleting the tests', 'Adding random features', 'Turning off errors'], 0, 'Refactoring rearranges code so it stays easier to change, with the same behavior.'),
+  q('qp7', 'programming', 'advanced', 'Why keep functions small?', ['So they cannot return values', 'So each one is easier to name, test, and reuse', 'So the file is empty', 'So variables must be global'], 1, 'A small function has one job, which makes the call sites clearer.'),
+  q('qr1', 'reasoning', 'foundation', 'Evidence is:', ['The conclusion you hope for', 'Information used to support a claim', 'The title font', 'A guess with no source'], 1, 'Evidence is the support. The claim is what you want the reader to accept.'),
+  q('qr2', 'reasoning', 'foundation', '"Some club members are mentors" means:', ['Every member is a mentor', 'At least one member is a mentor', 'No members are mentors', 'Mentors cannot be members'], 1, '"Some" means at least one. It does not mean all.'),
+  q('qr3', 'reasoning', 'foundation', 'A counterexample is used to:', ['Prove every case', 'Show that a general claim fails in at least one case', 'Replace the question', 'Count the mean'], 1, 'One solid counterexample is enough to defeat a claim that said "always".'),
+  q('qr4', 'reasoning', 'intermediate', 'If A implies B, and B is false, then:', ['A must be false', 'A must be true', 'B must be true', 'Nothing about A or B can be said'], 0, 'If A were true, B would be true. B is false, so A cannot be true.'),
+  q('qr5', 'reasoning', 'intermediate', 'Which move avoids a leap?', ['Adding "therefore" with no link', 'Stating the missing step between evidence and claim', 'Repeating the claim', 'Citing no source and no observation'], 1, 'The missing step is what a reader needs in order to follow you.'),
+  q('qr6', 'reasoning', 'advanced', 'A sufficient condition:', ['Is always irrelevant', 'Is enough on its own to guarantee the result', 'Is never required', 'Replaces evidence'], 1, 'If a sufficient condition holds, the result follows. It may not be the only path.'),
+  q('qd1', 'data', 'foundation', 'The mean is:', ['Always the middle value', 'The sum divided by how many values there are', 'The most fashionable color', 'The largest value only'], 1, 'Add the values and divide by the count. The middle value is the median.'),
+  q('qd2', 'data', 'foundation', 'A bar chart is a good fit for:', ['Comparing amounts across categories', 'Showing a password', 'Playing audio', 'Hiding the largest category'], 0, 'Bars compare sizes. Label the axis, and keep a zero baseline when length is the message.'),
+  q('qd3', 'data', 'foundation', 'An outlier is:', ['The average', 'A value far from the rest of the group', 'The sample size', 'A column name'], 1, 'Outliers sit far away and can pull a mean.'),
+  q('qd4', 'data', 'intermediate', 'Percent change uses which base?', ['The new value, always', 'The starting value you are comparing from', 'The largest value in the world', 'Zero'], 1, 'Change divided by the starting value is the percent change.'),
+  q('qd5', 'data', 'intermediate', 'A sample is biased when:', ['It is small but randomly drawn', 'Some kinds of people or rows were left out in a systematic way', 'It includes a date column', 'You computed a median'], 1, 'Bias is about who or what is missing, not about the existence of a date.'),
+  q('qd6', 'data', 'advanced', 'Before averaging survey scores, check:', ['Whether the scale and the missing answers make an average meaningful', 'Only the font of the chart', 'That every answer is a name', 'That the mean is larger than 100'], 0, 'An average of labels, or of a scale with lots of blanks, can invent precision.'),
+  q('qc1', 'communication', 'foundation', 'Jargon is a problem when:', ['The reader needs that exact term and you define it', 'The reader cannot act because the words are unfamiliar', 'You use a short sentence', 'You say who the update is for'], 1, 'Terms are fine when the reader shares them or you explain them.'),
+  q('qc2', 'communication', 'foundation', 'A concrete example helps because it:', ['Makes the idea something the listener can picture', 'Removes the need for a point', 'Adds unrelated history', 'Hides the ask'], 0, 'One example gives the listener a picture of the abstract idea.'),
+  q('qc3', 'communication', 'foundation', 'The first line of an update should usually contain:', ['The result or the ask', 'A long apology', 'Every name on the team', 'The weather'], 0, 'Busy readers decide from the first line whether they know what to do.'),
+  q('qc4', 'communication', 'intermediate', 'Active listening includes:', ['Waiting to talk, only', 'Restating the point to check you heard it', 'Interrupting with advice immediately', 'Changing the topic'], 1, 'A short restatement shows whether you caught the point.'),
+  q('qc5', 'communication', 'intermediate', 'A recommendation is easier to use when it:', ['Starts with the action and then the reason', 'Hides the action in the last paragraph', 'Uses a new term in every sentence', 'Avoids saying who should act'], 0, 'The reader should see the action before the supporting detail.'),
+  q('qc6', 'communication', 'advanced', 'A status note should include a next step because:', ['The reader needs to know what happens now', 'Length is the goal', 'It replaces the result', 'It removes the owner'], 0, 'A result without a next step leaves the reader to guess.'),
+  q('qs1', 'problemSolving', 'foundation', 'A useful first step is to:', ['Name the constraint and what done looks like', 'Change three things at once', 'Skip the goal', 'Pick a tool before the problem'], 0, 'A constraint and a definition of done keep the next check small.'),
+  q('qs2', 'problemSolving', 'foundation', 'A hypothesis is:', ['A claim you can check', 'The final answer', 'A brand of software', 'A meeting invite'], 0, 'You should be able to say what would show the claim is wrong.'),
+  q('qs3', 'problemSolving', 'intermediate', 'Why change one thing at a time?', ['So you can tell which change matched the result', 'So the work has no record', 'So you can skip observation', 'So two bugs cancel out'], 0, 'Two changes at once leave you unsure which one mattered.'),
+  q('qs4', 'problemSolving', 'intermediate', 'An issue tree helps because it:', ['Splits a big question into smaller questions you can check', 'Replaces the evidence', 'Hides the recommendation', 'Makes every branch equal'], 0, 'Each branch is a question, not a slogan.'),
+  q('qs5', 'problemSolving', 'advanced', 'After a failed check you should:', ['Record what the check showed and isolate the next change', 'Repeat the same change and hope', 'Add three more changes', 'Delete the notes'], 0, 'The failed check is information. Keep the next change isolated.'),
+  q('ql1', 'creativity', 'foundation', 'A message that demands a password right now is:', ['A reason to pause and verify the sender another way', 'Always safe if the logo looks right', 'Something you must finish immediately', 'Proof your account is already gone'], 0, 'Urgency plus a password ask is a common phishing pattern.'),
+  q('ql2', 'creativity', 'foundation', 'Before opening an unexpected file you should:', ['Confirm the request through a channel you already trust', 'Open it if the name looks official', 'Forward it to the whole list', 'Disable updates'], 0, 'The file name is not proof.'),
+  q('ql3', 'creativity', 'intermediate', 'A shared password is risky because:', ['You cannot tell who used the account or remove just one person', 'It is always shorter', 'It encrypts every file', 'Browsers require it'], 0, 'Separate accounts show who acted and let you revoke one person.'),
+  q('ql4', 'creativity', 'intermediate', 'Multi-factor authentication adds:', ['A second check beyond the password', 'A public copy of the password', 'Admin rights for everyone', 'A reason to reuse passwords'], 0, 'The second factor still matters if the password leaks.'),
+  q('ql5', 'creativity', 'advanced', 'Least privilege means:', ['Give only the access the task needs', 'Give everyone admin access', 'Share the admin password in a doc', 'Turn off logs'], 0, 'Extra access becomes extra damage if the account is misused.'),
+]
+
+export const cardSeeds: { id: string; skillId: SkillId; front: string; back: string }[] = [
+  { id: 'card-var', skillId: 'programming', front: 'What does a variable store?', back: 'A named value the program can read or update.' },
+  { id: 'card-loop', skillId: 'programming', front: 'What is a loop for?', back: 'Repeating a step while a condition holds.' },
+  { id: 'card-some', skillId: 'reasoning', front: 'What does "some" mean in a claim?', back: 'At least one. It does not mean every.' },
+  { id: 'card-imply', skillId: 'reasoning', front: 'If A implies B and B is false, what about A?', back: 'A must be false. Otherwise B would be true.' },
+  { id: 'card-median', skillId: 'data', front: 'How do you find the median?', back: 'Order the values and take the middle one. That is not the mean.' },
+  { id: 'card-percent', skillId: 'data', front: 'What is the base of a percent change?', back: 'The starting value. Change divided by that start.' },
+  { id: 'card-ask', skillId: 'communication', front: 'What belongs in the first line of an update?', back: 'The result or the ask, so the reader knows what to do.' },
+  { id: 'card-listen', skillId: 'communication', front: 'What is one move in active listening?', back: 'Restate the point and check that you heard it.' },
+  { id: 'card-one', skillId: 'problemSolving', front: 'Why change one thing at a time?', back: 'So you can tell which change matched the result.' },
+  { id: 'card-hyp', skillId: 'problemSolving', front: 'What makes a hypothesis useful?', back: 'You can name a check that might show it is wrong.' },
+  { id: 'card-phish', skillId: 'creativity', front: 'What should you do with an urgent password request?', back: 'Pause and verify the sender through a channel you already trust.' },
+  { id: 'card-least', skillId: 'creativity', front: 'What is least privilege?', back: 'Give an account only the access the task needs.' },
+]
