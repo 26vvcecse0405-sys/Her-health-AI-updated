@@ -1,283 +1,332 @@
-import type {
-  CapstoneTemplate,
-  CareerDef,
-  CareerId,
-  Difficulty,
-  EducationLevel,
-  InterestDef,
-  LearningStyle,
-  SkillDef,
-  SkillId,
-  TaskTemplate,
-} from '../types.ts'
+import type { Article, Copy } from '../types'
+import type { SymptomChoice } from '../services/triage'
 
-export const difficultyWeight: Record<Difficulty, number> = {
-  foundation: 1,
-  intermediate: 2,
-  advanced: 3,
-}
+const reviewed = '24 Oct 2026'
 
-export const difficultyLabels: Record<Difficulty, string> = {
-  foundation: 'Foundation',
-  intermediate: 'Intermediate',
-  advanced: 'Advanced',
-}
-
-export const educationLabels: Record<EducationLevel, string> = {
-  school: 'School',
-  undergraduate: 'Undergraduate',
-  postgraduate: 'Postgraduate',
-  professional: 'Working professional',
-}
-
-export const styleLabels: Record<LearningStyle, string> = {
-  visual: 'Visual explanations',
-  reading: 'Reading and notes',
-  practice: 'Practice first',
-  mixed: 'A mix of all three',
-}
-
-export const skills: SkillDef[] = [
+export const mamaSymptoms: SymptomChoice[] = [
+  { id: 'nausea', label: { en: 'Nausea', kn: 'ವಾಕರಿಕೆ' } },
+  { id: 'heartburn', label: { en: 'Heartburn', kn: 'ಎದೆಯುರಿ' } },
+  { id: 'back-pain', label: { en: 'Back pain', kn: 'ಬೆನ್ನು ನೋವು' } },
+  { id: 'mild-headache', label: { en: 'Mild headache', kn: 'ಸೌಮ್ಯ ತಲೆನೋವು' } },
+  { id: 'mood', label: { en: 'Mood change', kn: 'ಮನಸ್ಥಿತಿ ಬದಲಾವಣೆ' } },
+  { id: 'swelling', label: { en: 'Swelling of feet', kn: 'ಪಾದದ ಊತ' } },
   {
-    id: 'programming',
-    label: 'Programming',
-    summary: 'You can read, write, and fix small programs.',
-    color: '#22d3ee',
+    id: 'fever',
+    label: { en: 'Fever', kn: 'ಜ್ವರ' },
+    level: 'prompt',
+    notice: {
+      en: 'Fever in pregnancy needs prompt clinical advice today. If you are confused, very drowsy, or short of breath, contact emergency services now.',
+      kn: 'ಗರ್ಭಾವಸ್ಥೆಯ ಜ್ವರಕ್ಕೆ ಇಂದು ವೈದ್ಯಕೀಯ ಸಲಹೆ ಬೇಕು. ಗೊಂದಲ, ತೀವ್ರ ನಿದ್ರೆ, ಅಥವಾ ಉಸಿರಾಟ ಕಷ್ಟವಿದ್ದರೆ ಈಗಲೇ ತುರ್ತು ಸೇವೆಯನ್ನು ಸಂಪರ್ಕಿಸಿ.',
+    },
   },
   {
-    id: 'reasoning',
-    label: 'Logical reasoning',
-    summary: 'You can tell a valid conclusion from a guess.',
-    color: '#60a5fa',
+    id: 'heavy-bleeding',
+    label: { en: 'Heavy vaginal bleeding', kn: 'ತೀವ್ರ ಯೋನಿ ರಕ್ತಸ್ರಾವ' },
+    level: 'emergency',
+    notice: {
+      en: 'Heavy vaginal bleeding in pregnancy is an emergency warning sign. Contact local emergency services now. Do not wait for this app to ask more questions.',
+      kn: 'ಗರ್ಭಾವಸ್ಥೆಯಲ್ಲಿ ತೀವ್ರ ಯೋನಿ ರಕ್ತಸ್ರಾವ ತುರ್ತು ಎಚ್ಚರಿಕೆ. ಈಗಲೇ ಸ್ಥಳೀಯ ತುರ್ತು ಸೇವೆಯನ್ನು ಸಂಪರ್ಕಿಸಿ. ಈ ಅಪ್ಲಿಕೇಶನ್ ಇನ್ನಷ್ಟು ಕೇಳುವವರೆಗೆ ಕಾಯಬೇಡಿ.',
+    },
   },
   {
-    id: 'data',
-    label: 'Data analysis',
-    summary: 'You can read numbers, charts, and the limits of a sample.',
-    color: '#a78bfa',
+    id: 'headache-vision',
+    label: { en: 'Severe headache with vision changes', kn: 'ತೀವ್ರ ತಲೆನೋವು ಮತ್ತು ದೃಷ್ಟಿ ಬದಲಾವಣೆ' },
+    level: 'emergency',
+    notice: {
+      en: 'A severe headache with spots, blurring, or other vision change needs emergency care now, especially in the second half of pregnancy.',
+      kn: 'ತೀವ್ರ ತಲೆನೋವಿನೊಂದಿಗೆ ಕಣ್ಣಲ್ಲಿ ಚುಕ್ಕೆ, ಮಸುಕು, ಅಥವಾ ದೃಷ್ಟಿ ಬದಲಾವಣೆ ಇದ್ದರೆ ಈಗಲೇ ತುರ್ತು ಆರೈಕೆ ಬೇಕು. ಗರ್ಭದ ಉತ್ತರಾರ್ಧದಲ್ಲಿ ಇದು ಮುಖ್ಯ.',
+    },
   },
   {
-    id: 'communication',
-    label: 'Communication',
-    summary: 'You can make a point clear for a specific reader.',
-    color: '#34d399',
+    id: 'severe-pain',
+    label: { en: 'Severe abdominal pain', kn: 'ತೀವ್ರ ಹೊಟ್ಟೆ ನೋವು' },
+    level: 'emergency',
   },
   {
-    id: 'problemSolving',
-    label: 'Problem-solving',
-    summary: 'You can split a hard problem into a piece you can check.',
-    color: '#fbbf24',
+    id: 'reduced-movement',
+    label: { en: 'Baby moving much less', kn: 'ಮಗು ತುಂಬಾ ಕಡಿಮೆ ಚಲಿಸುತ್ತಿದೆ' },
+    level: 'emergency',
+    notice: {
+      en: 'A clear decrease in the baby’s movements needs same-hour assessment. Contact emergency care or the maternity unit now. Do not wait for a chatbot.',
+      kn: 'ಮಗುವಿನ ಚಲನೆ ಸ್ಪಷ್ಟವಾಗಿ ಕಡಿಮೆಯಾದರೆ ಅದೇ ಗಂಟೆಯಲ್ಲಿ ಪರೀಕ್ಷೆ ಬೇಕು. ಈಗಲೇ ತುರ್ತು ಆರೈಕೆ ಅಥವಾ ಪ್ರಸವ ಘಟಕವನ್ನು ಸಂಪರ್ಕಿಸಿ.',
+    },
   },
+  { id: 'breathing', label: { en: 'Trouble breathing', kn: 'ಉಸಿರಾಟದ ತೊಂದರೆ' }, level: 'emergency' },
+  { id: 'seizure', label: { en: 'Seizure or collapse', kn: 'ಮೈಮರೆ ಅಥವಾ ಕುಸಿತ' }, level: 'emergency' },
+  { id: 'self-harm', label: { en: 'Thoughts of self-harm', kn: 'ತನ್ನನ್ನು ನೋಯಿಸಿಕೊಳ್ಳುವ ಆಲೋಚನೆ' }, level: 'emergency' },
+]
+
+export const ironSymptoms: SymptomChoice[] = [
+  { id: 'fatigue', label: { en: 'Fatigue', kn: 'ಆಯಾಸ' } },
+  { id: 'dizziness', label: { en: 'Dizziness', kn: 'ತಲೆ ಸುತ್ತು' } },
+  { id: 'cold', label: { en: 'Feeling unusually cold', kn: 'ಅಸಾಮಾನ್ಯ ಚಳಿ' } },
+  { id: 'headache', label: { en: 'Headache', kn: 'ತಲೆನೋವು' } },
+  { id: 'pale-self', label: { en: 'I look pale to myself', kn: 'ನನಗೆ ನಾನು ಬಿಳುಚಿಕೊಂಡಂತೆ ಕಾಣುತ್ತೇನೆ' } },
+  { id: 'breathless', label: { en: 'Breathless on hills or stairs', kn: 'ಏರು ಅಥವಾ ಮೆಟ್ಟಿಲಲ್ಲಿ ಉಸಿರು ಕಟ್ಟುವಿಕೆ' } },
+  { id: 'chest-pain', label: { en: 'Chest pain', kn: 'ಎದೆ ನೋವು' }, level: 'emergency' },
+  { id: 'fainting', label: { en: 'Fainting', kn: 'ಮೂರ್ಛೆ' }, level: 'emergency' },
+  { id: 'black-stools', label: { en: 'Black stools', kn: 'ಕಪ್ಪು ಮಲ' }, level: 'emergency', notice: { en: 'Black stools can be an emergency, especially with dizziness or fainting. Contact emergency services now. Do not start an iron medicine because of this screen.', kn: 'ಕಪ್ಪು ಮಲ, ವಿಶೇಷವಾಗಿ ತಲೆಸುತ್ತು ಅಥವಾ ಮೂರ್ಛೆಯೊಂದಿಗೆ, ತುರ್ತು ಆಗಬಹುದು. ಈಗಲೇ ತುರ್ತು ಸೇವೆಯನ್ನು ಸಂಪರ್ಕಿಸಿ. ಈ ಪರದೆಯಿಂದ ಕಬ್ಬಿಣದ ಔಷಧ ಆರಂಭಿಸಬೇಡಿ.' } },
+  { id: 'severe-breathless', label: { en: 'Severe breathlessness at rest', kn: 'ವಿಶ್ರಾಂತಿಯಲ್ಲಿಯೂ ತೀವ್ರ ಉಸಿರಾಟ ಕಷ್ಟ' }, level: 'emergency' },
+]
+
+export const endoSymptoms: SymptomChoice[] = [
+  { id: 'pelvic-pain', label: { en: 'Pelvic pain', kn: 'ಶ್ರೋಣಿ ನೋವು' } },
+  { id: 'period-pain', label: { en: 'Pain with a period', kn: 'ಮುಟ್ಟಿನ ನೋವು' } },
+  { id: 'bowel-pain', label: { en: 'Pain with bowel movements', kn: 'ಮಲ ವಿಸರ್ಜನೆಯಾಗುವಾಗ ನೋವು' } },
+  { id: 'fatigue', label: { en: 'Fatigue', kn: 'ಆಯಾಸ' } },
+  { id: 'spotting', label: { en: 'Spotting', kn: 'ಚುಕ್ಕೆ ರಕ್ತಸ್ರಾವ' } },
+  { id: 'back-pain', label: { en: 'Lower back pain', kn: 'ಸೊಂಟ ನೋವು' } },
   {
-    id: 'creativity',
-    label: 'Creativity',
-    summary: 'You can generate options, constrain them, and test one.',
-    color: '#f472b6',
+    id: 'heavy-bleeding',
+    label: { en: 'Soaking through a pad every hour', kn: 'ಪ್ರತಿ ಗಂಟೆಗೆ ಪ್ಯಾಡ್ ನೆನೆಯುವಷ್ಟು ರಕ್ತ' },
+    level: 'emergency',
+    notice: {
+      en: 'Bleeding that soaks through a pad every hour for several hours, or bleeding with fainting, needs emergency care now. A symptom log cannot tell whether this is endometriosis.',
+      kn: 'ಹಲವು ಗಂಟೆಗಳ ಕಾಲ ಪ್ರತಿ ಗಂಟೆಗೆ ಪ್ಯಾಡ್ ನೆನೆಯುವ ರಕ್ತಸ್ರಾವ, ಅಥವಾ ಮೂರ್ಛೆಯೊಂದಿಗೆ ರಕ್ತಸ್ರಾವ, ಈಗಲೇ ತುರ್ತು ಆರೈಕೆ ಬೇಕು. ಲಕ್ಷಣ ದಾಖಲೆ ಎಂಡೋಮೆಟ್ರಿಯೋಸಿಸ್ ಎಂದು ಹೇಳಲು ಸಾಧ್ಯವಿಲ್ಲ.',
+    },
+  },
+  { id: 'fainting', label: { en: 'Fainting', kn: 'ಮೂರ್ಛೆ' }, level: 'emergency' },
+]
+
+export const menoSymptoms: SymptomChoice[] = [
+  { id: 'hot-flash', label: { en: 'Hot flush', kn: 'ಬಿಸಿ ಉಕ್ಕುವಿಕೆ' } },
+  { id: 'sleep', label: { en: 'Sleep change', kn: 'ನಿದ್ರೆ ಬದಲಾವಣೆ' } },
+  { id: 'mood', label: { en: 'Mood change', kn: 'ಮನಸ್ಥಿತಿ ಬದಲಾವಣೆ' } },
+  { id: 'irregular', label: { en: 'Cycle becoming irregular', kn: 'ಋತುಚಕ್ರ ಅನಿಯಮಿತವಾಗುತ್ತಿದೆ' } },
+  { id: 'dryness', label: { en: 'Vaginal dryness', kn: 'ಯೋನಿ ಒಣಗುವಿಕೆ' } },
+  {
+    id: 'post-bleeding',
+    label: { en: 'Bleeding after periods had stopped', kn: 'ಮುಟ್ಟು ನಿಂತ ನಂತರ ರಕ್ತಸ್ರಾವ' },
+    level: 'prompt',
+    notice: {
+      en: 'Bleeding after the periods have stopped needs a clinician’s assessment. It is not something to explain away in an app. If the bleeding is heavy or you feel faint, use emergency services now.',
+      kn: 'ಮುಟ್ಟು ನಿಂತ ನಂತರದ ರಕ್ತಸ್ರಾವಕ್ಕೆ ವೈದ್ಯರ ಪರೀಕ್ಷೆ ಬೇಕು. ಅಪ್ಲಿಕೇಶನ್‌ನಲ್ಲಿ ಅದನ್ನು ಬಿಡಿಸಿ ಹೇಳಬೇಡಿ. ರಕ್ತ ಹೆಚ್ಚಿದ್ದರೆ ಅಥವಾ ಮೂರ್ಛೆ ಬಂದರೆ ಈಗಲೇ ತುರ್ತು ಸೇವೆಗೆ ಹೋಗಿ.',
+    },
+  },
+  { id: 'chest-pain', label: { en: 'Chest pain', kn: 'ಎದೆ ನೋವು' }, level: 'emergency' },
+  { id: 'weakness', label: { en: 'Sudden one-sided weakness', kn: 'ಇದ್ದಕ್ಕಿದ್ದಂತೆ ಒಂದು ಬದಿಯ ದುರ್ಬಲತೆ' }, level: 'emergency' },
+]
+
+export const wellnessSymptoms: SymptomChoice[] = [
+  { id: 'low-mood', label: { en: 'Low mood', kn: 'ಕುಗ್ಗಿದ ಮನಸ್ಸು' } },
+  { id: 'anxiety', label: { en: 'Anxiety', kn: 'ಆತಂಕ' } },
+  { id: 'stress', label: { en: 'Stress', kn: 'ಒತ್ತಡ' } },
+  { id: 'sleep', label: { en: 'Poor sleep', kn: 'ಕಡಿಮೆ ನಿದ್ರೆ' } },
+  {
+    id: 'self-harm',
+    label: { en: 'Thoughts of self-harm', kn: 'ತನ್ನನ್ನು ನೋಯಿಸಿಕೊಳ್ಳುವ ಆಲೋಚನೆ' },
+    level: 'emergency',
+    notice: {
+      en: 'If you may act on thoughts of harming yourself, contact local emergency services now. In India you can also call Tele-MANAS at 14416. You deserve help from a person, not only an app.',
+      kn: 'ನಿಮ್ಮನ್ನು ನೋಯಿಸಿಕೊಳ್ಳುವ ಆಲೋಚನೆಯ ಮೇಲೆ ನೀವು ವರ್ತಿಸಬಹುದು ಎನಿಸಿದರೆ ಈಗಲೇ ಸ್ಥಳೀಯ ತುರ್ತು ಸೇವೆಯನ್ನು ಸಂಪರ್ಕಿಸಿ. ಭಾರತದಲ್ಲಿ Tele-MANAS 14416 ಗೆ ಕರೆ ಮಾಡಬಹುದು. ನಿಮಗೆ ವ್ಯಕ್ತಿಯ ಸಹಾಯ ಬೇಕು, ಅಪ್ಲಿಕೇಶನ್ ಮಾತ್ರವಲ್ಲ.',
+    },
   },
 ]
 
-export const skillById = Object.fromEntries(skills.map((skill) => [skill.id, skill])) as Record<SkillId, SkillDef>
+export const skinSymptoms: SymptomChoice[] = [
+  { id: 'itch', label: { en: 'Itch', kn: 'ತುರಿಕೆ' } },
+  { id: 'rash', label: { en: 'New rash', kn: 'ಹೊಸ ದದ್ದು' } },
+  { id: 'colour', label: { en: 'Colour change', kn: 'ಬಣ್ಣ ಬದಲಾವಣೆ' } },
+  { id: 'mole', label: { en: 'A mole that looks different to me', kn: 'ನನಗೆ ಬೇರೆಯಾಗಿ ಕಾಣುವ ಮಚ್ಚೆ' } },
+]
 
-const aimlReasons: Record<SkillId, string> = {
-  programming: 'Model code, data pipelines, and experiments are written as programs.',
-  reasoning: 'You have to separate what a metric shows from what it does not show.',
-  data: 'Most of the work is deciding whether the data can support the claim.',
-  communication: 'A model nobody can explain does not help a teammate decide.',
-  problemSolving: 'Training runs fail. The useful habit is isolating one cause.',
-  creativity: 'Feature ideas and product uses still start as options you have to test.',
+export const bodyAreas = [
+  { id: 'head', label: { en: 'Head', kn: 'ತಲೆ' } },
+  { id: 'chest', label: { en: 'Chest', kn: 'ಎದೆ' } },
+  { id: 'abdomen', label: { en: 'Abdomen', kn: 'ಹೊಟ್ಟೆ' } },
+  { id: 'pelvis', label: { en: 'Pelvis', kn: 'ಶ್ರೋಣಿ' } },
+  { id: 'back', label: { en: 'Lower back', kn: 'ಸೊಂಟ' } },
+  { id: 'legs', label: { en: 'Legs', kn: 'ಕಾಲುಗಳು' } },
+  { id: 'joints', label: { en: 'Joints', kn: 'ಕೀಲುಗಳು' } },
+]
+
+export const pregnancyStages = [
+  { id: 'unspecified', label: { en: 'Prefer not to say', kn: 'ಹೇಳಲು ಇಷ್ಟವಿಲ್ಲ' } },
+  { id: 'trying', label: { en: 'Planning a pregnancy', kn: 'ಗರ್ಭ ಯೋಜನೆ' } },
+  { id: 'trimester-1', label: { en: 'First trimester', kn: 'ಮೊದಲ ತ್ರೈಮಾಸಿಕ' } },
+  { id: 'trimester-2', label: { en: 'Second trimester', kn: 'ಎರಡನೇ ತ್ರೈಮಾಸಿಕ' } },
+  { id: 'trimester-3', label: { en: 'Third trimester', kn: 'ಮೂರನೇ ತ್ರೈಮಾಸಿಕ' } },
+  { id: 'postpartum', label: { en: 'After birth', kn: 'ಹೆರಿಗೆಯ ನಂತರ' } },
+]
+
+export const stageEducation: Record<string, { body: Copy; source: string }> = {
+  unspecified: {
+    body: {
+      en: 'You can log symptoms without naming a stage. Bring the dates and the words you use to a clinician. This app will not estimate a due date or a risk score.',
+      kn: 'ಹಂತವನ್ನು ಹೇಳದೆಯೂ ಲಕ್ಷಣಗಳನ್ನು ದಾಖಲಿಸಬಹುದು. ದಿನಾಂಕಗಳನ್ನು ವೈದ್ಯರಿಗೆ ತೋರಿಸಿ. ಈ ಅಪ್ಲಿಕೇಶನ್ ಹೆರಿಗೆ ದಿನ ಅಥವಾ ಅಪಾಯದ ಅಂಕವನ್ನು ಲೆಕ್ಕಿಸುವುದಿಲ್ಲ.',
+    },
+    source: 'Demo education. Not a personal care plan.',
+  },
+  trying: {
+    body: {
+      en: 'People planning a pregnancy are often offered a conversation about folic acid, existing medicines, and vaccines. Ask a clinician before starting or stopping any supplement. Do not use this page to time intercourse or to confirm a pregnancy.',
+      kn: 'ಗರ್ಭ ಯೋಜಿಸುವವರಿಗೆ ಫೋಲಿಕ್ ಆಮ್ಲ, ಈಗಿನ ಔಷಧಿಗಳು ಮತ್ತು ಲಸಿಕೆಗಳ ಬಗ್ಗೆ ಮಾತುಕತೆ ಸಾಮಾನ್ಯ. ಯಾವುದೇ ಪೂರಕವನ್ನು ಆರಂಭಿಸುವ ಅಥವಾ ನಿಲ್ಲಿಸುವ ಮೊದಲು ವೈದ್ಯರನ್ನು ಕೇಳಿ.',
+    },
+    source: 'General preconception education. Reviewed 24 Oct 2026.',
+  },
+  'trimester-1': {
+    body: {
+      en: 'Nausea and tiredness are commonly discussed in early pregnancy. They still deserve care if they stop you drinking, eating, or standing safely. Bleeding, severe pain, fainting, or one-sided pain need urgent assessment, not a home explanation.',
+      kn: 'ಆರಂಭಿಕ ಗರ್ಭದಲ್ಲಿ ವಾಕರಿಕೆ ಮತ್ತು ಆಯಾಸ ಸಾಮಾನ್ಯವಾಗಿ ಚರ್ಚೆಯಾಗುತ್ತವೆ. ನೀರು, ಆಹಾರ, ಅಥವಾ ಸುರಕ್ಷಿತವಾಗಿ ನಿಲ್ಲುವುದು ನಿಂತರೆ ಆರೈಕೆ ಬೇಕು. ರಕ್ತಸ್ರಾವ, ತೀವ್ರ ನೋವು, ಮೂರ್ಛೆಗೆ ತುರ್ತು ಪರೀಕ್ಷೆ ಬೇಕು.',
+    },
+    source: 'Educational themes from public antenatal warning signs. Reviewed 24 Oct 2026.',
+  },
+  'trimester-2': {
+    body: {
+      en: 'Many people feel movement become familiar in this stage. A clear, lasting drop in movement needs same-day maternity assessment. Headache with vision change, or sudden swelling of the face with headache, also needs urgent care.',
+      kn: 'ಈ ಹಂತದಲ್ಲಿ ಮಗುವಿನ ಚಲನೆ ಪರಿಚಿತವಾಗಬಹುದು. ಚಲನೆ ಸ್ಪಷ್ಟವಾಗಿ ಕಡಿಮೆಯಾದರೆ ಅದೇ ದಿನ ಪ್ರಸವ ತಪಾಸಣೆ ಬೇಕು. ದೃಷ್ಟಿ ಬದಲಾವಣೆಯೊಂದಿಗೆ ತಲೆನೋವು ಇದ್ದರೆ ತುರ್ತು ಆರೈಕೆ ಬೇಕು.',
+    },
+    source: 'Educational themes from public antenatal warning signs. Reviewed 24 Oct 2026.',
+  },
+  'trimester-3': {
+    body: {
+      en: 'Write down contractions, fluid, bleeding, and the baby’s movements in your own words. This page cannot tell labour from an emergency. Trouble breathing, heavy bleeding, seizure, or a severe headache with vision change means emergency care now.',
+      kn: 'ನೋವು, ನೀರು, ರಕ್ತಸ್ರಾವ ಮತ್ತು ಮಗುವಿನ ಚಲನೆಯನ್ನು ನಿಮ್ಮ ಮಾತಿನಲ್ಲಿ ಬರೆಯಿರಿ. ಈ ಪುಟ ಪ್ರಸವವನ್ನು ತುರ್ತಿನಿಂದ ಬೇರ್ಪಡಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ. ಉಸಿರಾಟ ಕಷ್ಟ, ತೀವ್ರ ರಕ್ತ, ಅಥವಾ ದೃಷ್ಟಿ ಬದಲಾವಣೆಯೊಂದಿಗೆ ತಲೆನೋವು ಇದ್ದರೆ ಈಗಲೇ ತುರ್ತು ಆರೈಕೆ.',
+    },
+    source: 'Educational themes from public antenatal warning signs. Reviewed 24 Oct 2026.',
+  },
+  postpartum: {
+    body: {
+      en: 'After birth, heavy bleeding, chest pain, trouble breathing, a severe headache, a red painful leg, or thoughts of harm need urgent help. Mood changes are common and still worth saying aloud to a clinician or a trusted person.',
+      kn: 'ಹೆರಿಗೆಯ ನಂತರ ತೀವ್ರ ರಕ್ತಸ್ರಾವ, ಎದೆ ನೋವು, ಉಸಿರಾಟ ಕಷ್ಟ, ತೀವ್ರ ತಲೆನೋವು, ಅಥವಾ ನೋಯಿಸಿಕೊಳ್ಳುವ ಆಲೋಚನೆಗೆ ತುರ್ತು ಸಹಾಯ ಬೇಕು. ಮನಸ್ಥಿತಿ ಬದಲಾವಣೆಯನ್ನು ವೈದ್ಯರಿಗೆ ಹೇಳಿ.',
+    },
+    source: 'Educational themes from public postnatal warning signs. Reviewed 24 Oct 2026.',
+  },
 }
 
-const softwareReasons: Record<SkillId, string> = {
-  programming: 'Shipping software is the daily craft of this path.',
-  reasoning: 'You use it when you read a bug report and decide what must be true.',
-  data: 'Logs, timings, and simple metrics tell you whether a change helped.',
-  communication: 'Issues, pull requests, and user notes are part of the job.',
-  problemSolving: 'A feature request is a problem to split before it is code.',
-  creativity: 'Interfaces and APIs have more than one workable shape.',
-}
+export const visitChecklist: Copy[] = [
+  { en: 'Dates of symptoms, in your own words.', kn: 'ಲಕ್ಷಣಗಳ ದಿನಾಂಕಗಳು, ನಿಮ್ಮ ಮಾತಿನಲ್ಲಿ.' },
+  { en: 'Medicines and supplements you already take. Do not change them for this visit.', kn: 'ನೀವು ಈಗ ತೆಗೆದುಕೊಳ್ಳುವ ಔಷಧಿ ಮತ್ತು ಪೂರಕಗಳು. ಭೇಟಿಗಾಗಿ ಅವುಗಳನ್ನು ಬದಲಾಯಿಸಬೇಡಿ.' },
+  { en: 'Questions you want answered before you leave.', kn: 'ಹೊರಡುವ ಮೊದಲು ಉತ್ತರ ಬೇಕಾದ ಪ್ರಶ್ನೆಗಳು.' },
+  { en: 'A person who can help you remember, if you want one.', kn: 'ನೆನಪಿಡಲು ಸಹಾಯ ಮಾಡುವ ವ್ಯಕ್ತಿ, ನಿಮಗೆ ಬೇಕಾದರೆ.' },
+]
 
-const dataReasons: Record<SkillId, string> = {
-  programming: 'Cleaning and checking data is usually done in code.',
-  reasoning: 'The question is whether the evidence supports the decision.',
-  data: 'This is the core craft: summaries, charts, and their limits.',
-  communication: 'A finding matters only if a reader can act on it.',
-  problemSolving: 'Messy source data has to be broken into checks.',
-  creativity: 'The chart and the question can be framed in more than one way.',
-}
+export const medicineQuestions: Copy[] = [
+  { en: 'What is this medicine for, in plain words?', kn: 'ಈ ಔಷಧಿ ಯಾವುದಕ್ಕೆ, ಸರಳ ಮಾತಿನಲ್ಲಿ?' },
+  { en: 'Should I take it with food?', kn: 'ಇದನ್ನು ಆಹಾರದೊಂದಿಗೆ ತೆಗೆದುಕೊಳ್ಳಬೇಕೇ?' },
+  { en: 'Which new symptoms mean I should stop and call you?', kn: 'ಯಾವ ಹೊಸ ಲಕ್ಷಣ ಬಂದರೆ ನಿಲ್ಲಿಸಿ ನಿಮಗೆ ಕರೆ ಮಾಡಬೇಕು?' },
+  { en: 'Are there shop-bought medicines I should avoid?', kn: 'ಅಂಗಡಿಯಲ್ಲಿ ಕೊಳ್ಳುವ ಯಾವ ಔಷಧಿಗಳನ್ನು ತಪ್ಪಿಸಬೇಕು?' },
+]
 
-const designReasons: Record<SkillId, string> = {
-  programming: 'You will inspect basic interface code even if you do not write the system.',
-  reasoning: 'A flow either does or does not let someone finish the task.',
-  data: 'Usability notes and simple counts keep the design honest.',
-  communication: 'You are translating a user need for the rest of the team.',
-  problemSolving: 'A screen is a set of constraints: task, time, and context.',
-  creativity: 'Options, sketches, and prototypes are the work itself.',
-}
+export const hubCards: { href: string; kicker: string; title: Copy; body: Copy }[] = [
+  { href: '/health/mama', kicker: 'MamaSignal', title: { en: 'Pregnancy symptom navigator', kn: 'ಗರ್ಭಧಾರಣೆ ಲಕ್ಷಣ ಸಹಾಯ' }, body: { en: 'Log stage and symptoms. Urgent warning signs appear immediately, before any chat.', kn: 'ಹಂತ ಮತ್ತು ಲಕ್ಷಣಗಳನ್ನು ದಾಖಲಿಸಿ. ತುರ್ತು ಎಚ್ಚರಿಕೆಗಳು ಚಾಟ್‌ಗಿಂತ ಮೊದಲು ಕಾಣಿಸುತ್ತವೆ.' } },
+  { href: '/health/iron', kicker: 'IronWise', title: { en: 'Iron and anemia education', kn: 'ಕಬ್ಬಿಣ ಮತ್ತು ರಕ್ತಹೀನತೆ ಶಿಕ್ಷಣ' }, body: { en: 'Summarize fatigue, optional diet notes, and lab numbers you type from a report.', kn: 'ಆಯಾಸ, ಐಚ್ಛಿಕ ಆಹಾರ ಟಿಪ್ಪಣಿ, ಮತ್ತು ವರದಿಯಿಂದ ನೀವು ಟೈಪ್ ಮಾಡುವ ಪ್ರಯೋಗಾಲಯ ಸಂಖ್ಯೆಗಳು.' } },
+  { href: '/health/endo', kicker: 'EndoLens', title: { en: 'Pain and cycle journal', kn: 'ನೋವು ಮತ್ತು ಋತುಚಕ್ರ ದಿನಚರಿ' }, body: { en: 'Map pain, flow, and impact. Patterns here cannot confirm endometriosis.', kn: 'ನೋವು, ರಕ್ತಸ್ರಾವ ಮತ್ತು ದೈನಂದಿನ ಪರಿಣಾಮವನ್ನು ದಾಖಲಿಸಿ. ಇದು ಎಂಡೋಮೆಟ್ರಿಯೋಸಿಸ್ ಖಚಿತಪಡಿಸುವುದಿಲ್ಲ.' } },
+  { href: '/health/meno', kicker: 'MenoMap', title: { en: 'Menopause companion', kn: 'ರಜೋನಿವೃತ್ತಿ ಸಹಚರ' }, body: { en: 'Track sleep, mood, flushes, and cycle changes, with a calendar.', kn: 'ನಿದ್ರೆ, ಮನಸ್ಸು, ಬಿಸಿ ಉಕ್ಕುವಿಕೆ ಮತ್ತು ಋತುಚಕ್ರ ಬದಲಾವಣೆಯನ್ನು ಕ್ಯಾಲೆಂಡರ್‌ನಲ್ಲಿ ಇಡಿ.' } },
+  { href: '/health/timeline', kicker: 'Timeline', title: { en: 'Women’s health timeline', kn: 'ಮಹಿಳಾ ಆರೋಗ್ಯ ಕಾಲರೇಖೆ' }, body: { en: 'Filter every saved note and choose what a summary may include.', kn: 'ಉಳಿಸಿದ ಎಲ್ಲಾ ಟಿಪ್ಪಣಿಗಳನ್ನು ಶೋಧಿಸಿ, ಸಾರಾಂಶದಲ್ಲಿ ಏನು ಇರಬೇಕು ಎಂದು ಆಯ್ಕೆಮಾಡಿ.' } },
+  { href: '/health/skin', kicker: 'SkinTrack', title: { en: 'Skin change journal', kn: 'ಚರ್ಮ ಬದಲಾವಣೆ ದಿನಚರಿ' }, body: { en: 'Describe a change in words. Photos are stored only on this device and are not interpreted.', kn: 'ಬದಲಾವಣೆಯನ್ನು ಮಾತಿನಲ್ಲಿ ಬರೆಯಿರಿ. ಫೋಟೋ ಈ ಸಾಧನದಲ್ಲೇ ಉಳಿಯುತ್ತದೆ. ಅದನ್ನು ಓದಲಾಗುವುದಿಲ್ಲ.' } },
+  { href: '/health/wellness', kicker: 'Wellness', title: { en: 'Mental wellness check-in', kn: 'ಮಾನಸಿಕ ಯೋಗಕ್ಷೇಮ' }, body: { en: 'A short mood note, plus immediate helplines if you select thoughts of self-harm.', kn: 'ಚಿಕ್ಕ ಮನಸ್ಥಿತಿ ಟಿಪ್ಪಣಿ. ಆತ್ಮಹಾನಿ ಆಲೋಚನೆ ಆರಿಸಿದರೆ ತಕ್ಷಣ ಸಹಾಯ ಸಂಖ್ಯೆಗಳು.' } },
+  { href: '/health/screening', kicker: 'Screening', title: { en: 'Cancer awareness', kn: 'ಕ್ಯಾನ್ಸರ್ ಜಾಗೃತಿ' }, body: { en: 'What screening is for, and which changes should be examined. No personal risk score.', kn: 'ತಪಾಸಣೆ ಯಾವುದಕ್ಕೆ, ಯಾವ ಬದಲಾವಣೆಯನ್ನು ತೋರಿಸಬೇಕು. ವೈಯಕ್ತಿಕ ಅಪಾಯದ ಅಂಕವಿಲ್ಲ.' } },
+  { href: '/health/nutrition', kicker: 'Nutrition', title: { en: 'Food across life stages', kn: 'ಜೀವನ ಹಂತಗಳ ಆಹಾರ' }, body: { en: 'Everyday food ideas. Not a diet prescription and not a supplement dose.', kn: 'ದೈನಂದಿನ ಆಹಾರ ಕಲ್ಪನೆಗಳು. ಆಹಾರ ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಅಥವಾ ಪೂರಕದ ಡೋಸ್ ಅಲ್ಲ.' } },
+  { href: '/health/anemia-lens', kicker: 'AnemiaLens', title: { en: 'Fingernail photo awareness', kn: 'ಉಗುರು ಫೋಟೋ ಜಾಗೃತಿ' }, body: { en: 'A guided photo check. The picture is not analysed and cannot diagnose anaemia.', kn: 'ಮಾರ್ಗದರ್ಶಿ ಫೋಟೋ ಪರಿಶೀಲನೆ. ಚಿತ್ರವನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುವುದಿಲ್ಲ ಮತ್ತು ರಕ್ತಹೀನತೆ ನಿರ್ಣಯಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ.' } },
+  { href: '/health/reproductive', kicker: 'Private', title: { en: 'Pregnancy worry and contraception facts', kn: 'ಗರ್ಭದ ಚಿಂತೆ ಮತ್ತು ಗರ್ಭನಿರೋಧಕ ಮಾಹಿತಿ' }, body: { en: 'Time-sensitive emergency contraception and testing, without a personal prescription.', kn: 'ಸಮಯಕ್ಕೆ ಸಂಬಂಧಿಸಿದ ತುರ್ತು ಗರ್ಭನಿರೋಧಕ ಮತ್ತು ಪರೀಕ್ಷೆ. ವೈಯಕ್ತಿಕ ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಇಲ್ಲ.' } },
+]
 
-const cyberReasons: Record<SkillId, string> = {
-  programming: 'You read code and scripts to see how a system actually behaves.',
-  reasoning: 'An alert is a claim. You test what would have to be true.',
-  data: 'Logs are data. Patterns and false alarms both live there.',
-  communication: 'A finding needs a clear severity and a next step.',
-  problemSolving: 'Incidents are open problems with incomplete information.',
-  creativity: 'Attackers vary the path. Defenders practice imagining those paths.',
-}
-
-const founderReasons: Record<SkillId, string> = {
-  programming: 'A small build lets you test an offer without hiring a team.',
-  reasoning: 'You have to separate a customer story from a market fact.',
-  data: 'A few real numbers beat a long pitch.',
-  communication: 'People buy, join, or fund when they understand the point.',
-  problemSolving: 'A company problem is a stack of smaller checks.',
-  creativity: 'The offer itself is an idea you have to narrow and try.',
-}
-
-const consultingReasons: Record<SkillId, string> = {
-  programming: 'Light analysis in a notebook or sheet is often enough, and worth being able to do.',
-  reasoning: 'A recommendation is a conclusion someone will challenge.',
-  data: 'Clients ask what the numbers can and cannot support.',
-  communication: 'The deliverable is a clear argument, not a pile of analysis.',
-  problemSolving: 'The engagement starts by cutting the question down.',
-  creativity: 'Workshops and options are part of finding a path the client can use.',
-}
-
-export const careers: CareerDef[] = [
+export const nutritionStages: { id: string; label: Copy; body: Copy }[] = [
   {
-    id: 'aiml',
-    label: 'AI/ML Engineer',
-    blurb: 'Build and evaluate models with a clear claim about the data.',
-    targets: { programming: 80, reasoning: 75, data: 85, communication: 60, problemSolving: 80, creativity: 55 },
-    reasons: aimlReasons,
-    core: ['programming', 'data', 'reasoning', 'problemSolving'],
+    id: 'adolescence',
+    label: { en: 'Adolescence', kn: 'ಹರೆಯ' },
+    body: {
+      en: 'Regular meals, pulses, leafy greens, curd or milk if you use them, fruit, and iron-containing foods are common teaching points. Growth and heavy periods change what a clinician may discuss. This is not a meal plan for you.',
+      kn: 'ನಿಯಮಿತ ಊಟ, ಬೇಳೆ, ಸೊಪ್ಪು, ಮೊಸರು ಅಥವಾ ಹಾಲು, ಹಣ್ಣು ಮತ್ತು ಕಬ್ಬಿಣವಿರುವ ಆಹಾರಗಳು ಸಾಮಾನ್ಯ ಬೋಧನೆ. ಇದು ನಿಮಗೆ ನಿಗದಿಪಡಿಸಿದ ಊಟದ ಯೋಜನೆಯಲ್ಲ.',
+    },
   },
   {
-    id: 'software',
-    label: 'Software Developer',
-    blurb: 'Design, build, and repair software other people can run.',
-    targets: { programming: 85, reasoning: 70, data: 60, communication: 65, problemSolving: 80, creativity: 50 },
-    reasons: softwareReasons,
-    core: ['programming', 'problemSolving', 'reasoning'],
+    id: 'pregnancy',
+    label: { en: 'Pregnancy', kn: 'ಗರ್ಭಧಾರಣೆ' },
+    body: {
+      en: 'Cooked food, safe water, and folic acid or iron decisions belong with a clinician. This app will not tell you how many tablets to take. Guava, amla, or citrus with a meal is a common education point about vitamin C and plant iron. It does not treat anemia.',
+      kn: 'ಬೇಯಿಸಿದ ಆಹಾರ, ಸುರಕ್ಷಿತ ನೀರು, ಫೋಲಿಕ್ ಆಮ್ಲ ಅಥವಾ ಕಬ್ಬಿಣದ ನಿರ್ಧಾರ ವೈದ್ಯರದು. ಎಷ್ಟು ಮಾತ್ರೆ ಎಂದು ಈ ಅಪ್ಲಿಕೇಶನ್ ಹೇಳುವುದಿಲ್ಲ. ನೆಲ್ಲಿಕಾಯಿ ಅಥವಾ ನಿಂಬೆ ಜಾತಿಯ ಹಣ್ಣು ಊಟದೊಂದಿಗೆ ಸಾಮಾನ್ಯ ಶಿಕ್ಷಣ. ಅದು ರಕ್ತಹೀನತೆಯ ಚಿಕಿತ್ಸೆಯಲ್ಲ.',
+    },
   },
   {
-    id: 'dataAnalyst',
-    label: 'Data Analyst',
-    blurb: 'Turn a question into a checkable summary and a careful chart.',
-    targets: { programming: 65, reasoning: 70, data: 90, communication: 75, problemSolving: 70, creativity: 45 },
-    reasons: dataReasons,
-    core: ['data', 'reasoning', 'communication'],
-  },
-  {
-    id: 'uiux',
-    label: 'UI/UX Designer',
-    blurb: 'Shape a flow someone can finish, then test it.',
-    targets: { programming: 45, reasoning: 60, data: 55, communication: 80, problemSolving: 70, creativity: 85 },
-    reasons: designReasons,
-    core: ['creativity', 'communication', 'problemSolving'],
-  },
-  {
-    id: 'cyber',
-    label: 'Cybersecurity Analyst',
-    blurb: 'Read systems, logs, and alerts, then explain the risk.',
-    targets: { programming: 75, reasoning: 80, data: 65, communication: 60, problemSolving: 85, creativity: 45 },
-    reasons: cyberReasons,
-    core: ['programming', 'reasoning', 'problemSolving'],
-  },
-  {
-    id: 'entrepreneur',
-    label: 'Entrepreneur',
-    blurb: 'Find a real problem, test an offer, and explain the result.',
-    targets: { programming: 40, reasoning: 65, data: 60, communication: 85, problemSolving: 75, creativity: 80 },
-    reasons: founderReasons,
-    core: ['communication', 'creativity', 'problemSolving'],
-  },
-  {
-    id: 'consulting',
-    label: 'Management Consultant',
-    blurb: 'Frame a decision, test it with evidence, and write the recommendation.',
-    targets: { programming: 35, reasoning: 80, data: 75, communication: 90, problemSolving: 80, creativity: 60 },
-    reasons: consultingReasons,
-    core: ['communication', 'reasoning', 'problemSolving', 'data'],
+    id: 'menopause',
+    label: { en: 'Menopause', kn: 'ರಜೋನಿವೃತ್ತಿ' },
+    body: {
+      en: 'Calcium-containing foods, protein, and a conversation about bones, bleeding, and sleep are common topics. New bleeding after periods stop still needs a clinician, whatever you eat.',
+      kn: 'ಕ್ಯಾಲ್ಸಿಯಂ ಇರುವ ಆಹಾರ, ಪ್ರೋಟೀನ್, ಮೂಳೆ, ರಕ್ತಸ್ರಾವ ಮತ್ತು ನಿದ್ರೆಯ ಮಾತುಕತೆ ಸಾಮಾನ್ಯ. ಮುಟ್ಟು ನಿಂತ ನಂತರದ ಹೊಸ ರಕ್ತಸ್ರಾವಕ್ಕೆ ವೈದ್ಯರು ಬೇಕು.',
+    },
   },
 ]
 
-export const careerById = Object.fromEntries(careers.map((career) => [career.id, career])) as Record<CareerId, CareerDef>
-
-export const interests: InterestDef[] = [
-  { id: 'coding', label: 'Coding', skills: ['programming', 'problemSolving'] },
-  { id: 'ai', label: 'Artificial intelligence', skills: ['programming', 'data', 'reasoning'] },
-  { id: 'data', label: 'Data', skills: ['data', 'reasoning'] },
-  { id: 'design', label: 'Design', skills: ['creativity', 'communication'] },
-  { id: 'business', label: 'Business', skills: ['communication', 'problemSolving'] },
-  { id: 'security', label: 'Security', skills: ['programming', 'reasoning', 'problemSolving'] },
-  { id: 'communication', label: 'Communication', skills: ['communication'] },
-  { id: 'product', label: 'Product', skills: ['creativity', 'problemSolving', 'communication'] },
+export const screeningPoints: { title: Copy; body: Copy }[] = [
+  {
+    title: { en: 'Cervical screening', kn: 'ಗರ್ಭಕಂಠ ತಪಾಸಣೆ' },
+    body: {
+      en: 'Cervical screening looks for changes before a person feels ill. The test, the age, and the interval depend on the local program. Ask a primary health centre which test is offered where you live. This page does not calculate your risk and does not read a photograph.',
+      kn: 'ಗರ್ಭಕಂಠ ತಪಾಸಣೆ ಅನಾರೋಗ್ಯ ಕಾಣುವ ಮೊದಲು ಬದಲಾವಣೆಗಳನ್ನು ನೋಡುತ್ತದೆ. ಪರೀಕ್ಷೆ, ವಯಸ್ಸು ಮತ್ತು ಅಂತರ ಸ್ಥಳೀಯ ಕಾರ್ಯಕ್ರಮವನ್ನು ಅವಲಂಬಿಸಿವೆ. ನಿಮ್ಮ ಊರಿನಲ್ಲಿ ಯಾವ ಪರೀಕ್ಷೆ ಇದೆ ಎಂದು ಪ್ರಾಥಮಿಕ ಆರೋಗ್ಯ ಕೇಂದ್ರದಲ್ಲಿ ಕೇಳಿ.',
+    },
+  },
+  {
+    title: { en: 'Breast changes', kn: 'ಸ್ತನ ಬದಲಾವಣೆಗಳು' },
+    body: {
+      en: 'Knowing what is usual for you is different from a diagnosis. A new lump, skin dimpling, nipple discharge, or a change that stays should be examined. This app does not interpret breast or skin photos.',
+      kn: 'ನಿಮಗೆ ಸಾಮಾನ್ಯವಾದುದನ್ನು ತಿಳಿದಿರುವುದು ರೋಗ ನಿರ್ಣಯವಲ್ಲ. ಹೊಸ ಗಂಟು, ಚರ್ಮ ಸೆಳೆತ, ಮೊಲೆಯಿಂದ ಸ್ರಾವ, ಅಥವಾ ಉಳಿಯುವ ಬದಲಾವಣೆಯನ್ನು ತೋರಿಸಿ. ಈ ಅಪ್ಲಿಕೇಶನ್ ಫೋಟೋ ಓದುವುದಿಲ್ಲ.',
+    },
+  },
+  {
+    title: { en: 'Questions to ask', kn: 'ಕೇಳಬೇಕಾದ ಪ್ರಶ್ನೆಗಳು' },
+    body: {
+      en: 'Which screening, if any, is offered at my age? Where is it done? What will you do if the result is unclear? A paper result still belongs to a clinician’s explanation.',
+      kn: 'ನನ್ನ ವಯಸ್ಸಿಗೆ ಯಾವ ತಪಾಸಣೆ ಇದೆ? ಅದು ಎಲ್ಲಿ ನಡೆಯುತ್ತದೆ? ಫಲಿತಾಂಶ ಸ್ಪಷ್ಟವಿಲ್ಲದಿದ್ದರೆ ಏನು ಮಾಡುತ್ತೀರಿ?',
+    },
+  },
 ]
 
-export const interestById = Object.fromEntries(interests.map((interest) => [interest.id, interest])) as Record<InterestDef['id'], InterestDef>
-
-interface TaskSeed {
-  id: string
-  skillId: SkillId
-  title: string
-  summary: string
-  minutes: number
-  difficulty: Difficulty
-  style: Exclude<LearningStyle, 'mixed'>
-  resource: string
-  href: string
-}
-
-function task(seed: TaskSeed): TaskTemplate {
-  return { ...seed, prerequisite: null }
-}
-
-export const taskTemplates: TaskTemplate[] = [
-  task({ id: 'prog-read', skillId: 'programming', title: 'Name the pieces of a small program', summary: 'Read one short example and label the variables, the function, and the call.', minutes: 30, difficulty: 'foundation', style: 'reading', resource: 'MDN — JavaScript Guide', href: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide' }),
-  task({ id: 'prog-practice', skillId: 'programming', title: 'Write a function that filters a list', summary: 'Write a function that keeps items matching one condition, then call it on three lists.', minutes: 35, difficulty: 'foundation', style: 'practice', resource: 'MDN — Arrays', href: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array' }),
-  task({ id: 'prog-mid', skillId: 'programming', title: 'Fix a loop that stops too early', summary: 'Reproduce a loop that undercounts, change one condition, and show the new result.', minutes: 45, difficulty: 'intermediate', style: 'practice', resource: 'MDN — Loops and iteration', href: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Loops_and_iteration' }),
-  task({ id: 'prog-adv', skillId: 'programming', title: 'Split one script into two functions', summary: 'Take a 40-line script and separate input checking from the calculation. Each function should be callable on its own.', minutes: 60, difficulty: 'advanced', style: 'practice', resource: 'MDN — Functions', href: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions' }),
-  task({ id: 'reason-read', skillId: 'reasoning', title: 'Mark a valid and an invalid conclusion', summary: 'Take four short arguments and label which conclusion follows from the premises.', minutes: 30, difficulty: 'foundation', style: 'reading', resource: 'Stanford Encyclopedia — Informal logic, introduction only', href: 'https://plato.stanford.edu/entries/logic-informal/' }),
-  task({ id: 'reason-practice', skillId: 'reasoning', title: 'Test one if-then claim', summary: 'Write an if-then rule from your roadmap and find one case that would make it false.', minutes: 30, difficulty: 'foundation', style: 'practice', resource: 'Stanford Encyclopedia — Informal logic', href: 'https://plato.stanford.edu/entries/logic-informal/' }),
-  task({ id: 'reason-mid', skillId: 'reasoning', title: 'Separate evidence from a recommendation', summary: 'Rewrite a paragraph so the evidence is in one sentence and the recommendation is in the next.', minutes: 40, difficulty: 'intermediate', style: 'reading', resource: 'Plain Language — Organize for the reader', href: 'https://www.plainlanguage.gov/guidelines/organize/' }),
-  task({ id: 'reason-adv', skillId: 'reasoning', title: 'Stress-test a career-target claim', summary: 'Pick one target proficiency and write what evidence would raise it, and what evidence would not.', minutes: 50, difficulty: 'advanced', style: 'practice', resource: 'Stanford Encyclopedia — Informal logic', href: 'https://plato.stanford.edu/entries/logic-informal/' }),
-  task({ id: 'data-read', skillId: 'data', title: 'Read a chart without adding a cause', summary: 'Describe what a chart shows, then write one cause you are not allowed to claim from it.', minutes: 30, difficulty: 'foundation', style: 'reading', resource: 'Kaggle Learn — Data visualization', href: 'https://www.kaggle.com/learn/data-visualization' }),
-  task({ id: 'data-practice', skillId: 'data', title: 'Compute mean and median by hand', summary: 'Use a list of seven numbers. Report both summaries and say which one a single outlier moves.', minutes: 35, difficulty: 'foundation', style: 'practice', resource: 'Khan Academy — Mean, median, and mode', href: 'https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data' }),
-  task({ id: 'data-mid', skillId: 'data', title: 'Compare two groups with the same chart', summary: 'Plot or table two categories, state the difference, and name the sample size.', minutes: 45, difficulty: 'intermediate', style: 'practice', resource: 'Kaggle Learn — Pandas', href: 'https://www.kaggle.com/learn/pandas' }),
-  task({ id: 'data-adv', skillId: 'data', title: 'Write the limit under the finding', summary: 'Finish a six-line finding that includes the metric, the comparison, and one reason it might not generalize.', minutes: 60, difficulty: 'advanced', style: 'reading', resource: 'Kaggle Learn — Intro to machine learning', href: 'https://www.kaggle.com/learn/intro-to-machine-learning' }),
-  task({ id: 'comm-read', skillId: 'communication', title: 'Rewrite a paragraph for one reader', summary: 'Take a dense explanation and rewrite it for a first-year student in under 120 words.', minutes: 30, difficulty: 'foundation', style: 'reading', resource: 'Plain Language guidelines', href: 'https://www.plainlanguage.gov/guidelines/' }),
-  task({ id: 'comm-practice', skillId: 'communication', title: 'Open with the result', summary: 'Write a five-line update that starts with what you found, then the evidence, then the ask.', minutes: 30, difficulty: 'foundation', style: 'practice', resource: 'Plain Language — Write for your audience', href: 'https://www.plainlanguage.gov/guidelines/audience/' }),
-  task({ id: 'comm-mid', skillId: 'communication', title: 'Explain one skill gap out loud', summary: 'Record a two-minute explanation of your largest gap using the target, the score, and the next task.', minutes: 40, difficulty: 'intermediate', style: 'practice', resource: 'Purdue OWL — Paragraphs and coherence', href: 'https://owl.purdue.edu/owl/general_writing/academic_writing/paragraphs_and_paragraph_building/index.html' }),
-  task({ id: 'comm-adv', skillId: 'communication', title: 'Write a one-page recommendation', summary: 'Recommend one learning focus. Include the evidence, the alternative you rejected, and the time it takes.', minutes: 55, difficulty: 'advanced', style: 'reading', resource: 'Plain Language — Be concise', href: 'https://www.plainlanguage.gov/guidelines/concise/' }),
-  task({ id: 'solve-read', skillId: 'problemSolving', title: 'Write a bug as input, result, and expected', summary: 'Describe one failure in three lines: input, what happened, what should have happened.', minutes: 25, difficulty: 'foundation', style: 'reading', resource: 'MDN — JavaScript Guide', href: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide' }),
-  task({ id: 'solve-practice', skillId: 'problemSolving', title: 'Cut a task into a checkable slice', summary: 'Take a 2-hour idea and define a 30-minute version with a visible done state.', minutes: 30, difficulty: 'foundation', style: 'practice', resource: 'MDN — JavaScript Guide', href: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide' }),
-  task({ id: 'solve-mid', skillId: 'problemSolving', title: 'Change one variable at a time', summary: 'Debug a small failure by changing a single input, recording the result, then changing the next.', minutes: 45, difficulty: 'intermediate', style: 'practice', resource: 'MDN — JavaScript Guide', href: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide' }),
-  task({ id: 'solve-adv', skillId: 'problemSolving', title: 'Choose between two fixes', summary: 'Write two possible fixes, the check for each, and which one you would try first and why.', minutes: 55, difficulty: 'advanced', style: 'practice', resource: 'MDN — Functions', href: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions' }),
-  task({ id: 'create-read', skillId: 'creativity', title: 'List options before you pick', summary: 'For one study problem, write five different approaches before marking a favorite.', minutes: 25, difficulty: 'foundation', style: 'reading', resource: 'IDEO — Design thinking overview', href: 'https://designthinking.ideo.com/' }),
-  task({ id: 'create-practice', skillId: 'creativity', title: 'Prototype the smallest version', summary: 'Turn your favorite option into something you can try in 20 minutes: a sketch, a script, or a script outline.', minutes: 35, difficulty: 'foundation', style: 'practice', resource: 'MDN — Accessibility', href: 'https://developer.mozilla.org/en-US/docs/Web/Accessibility' }),
-  task({ id: 'create-mid', skillId: 'creativity', title: 'Add one constraint and redo it', summary: 'Redo the prototype with a hard limit: half the words, one screen, or no new tools.', minutes: 40, difficulty: 'intermediate', style: 'practice', resource: 'Material Design — Overview', href: 'https://m3.material.io/' }),
-  task({ id: 'create-adv', skillId: 'creativity', title: 'Test the idea on one person', summary: 'Show the prototype to one person, write what confused them, and change one thing.', minutes: 60, difficulty: 'advanced', style: 'practice', resource: 'W3C — Usability and accessibility basics', href: 'https://www.w3.org/WAI/fundamentals/' }),
+export const ARTICLES: Article[] = [
+  {
+    kind: 'article',
+    id: 'article-warning',
+    title: { en: 'Pregnancy warning signs saved on this device', kn: 'ಈ ಸಾಧನದಲ್ಲಿ ಉಳಿಸಿದ ಗರ್ಭಧಾರಣೆ ಎಚ್ಚರಿಕೆಗಳು' },
+    body: stageEducation['trimester-3']!.body,
+    source: 'Public antenatal warning-sign themes. Not a complete protocol.',
+    reviewed,
+    href: '/health/mama',
+  },
+  {
+    kind: 'article',
+    id: 'article-iron',
+    title: { en: 'Iron education saved on this device', kn: 'ಈ ಸಾಧನದಲ್ಲಿ ಉಳಿಸಿದ ಕಬ್ಬಿಣ ಶಿಕ್ಷಣ' },
+    body: {
+      en: 'Fatigue has many causes. Iron deficiency is one possibility a clinician can test. Leafy greens, pulses, and, for people who eat them, eggs, meat, or fish are common food sources. Tea or coffee with the meal can reduce absorption of plant iron. None of this diagnoses anemia or sets a tablet dose. WHO has published haemoglobin cutoffs used in public-health definitions; pregnancy uses different cutoffs, and your own laboratory’s printed interval is the one on your report.',
+      kn: 'ಆಯಾಸಕ್ಕೆ ಹಲವು ಕಾರಣಗಳಿವೆ. ಕಬ್ಬಿಣ ಕೊರತೆ ಅವುಗಳಲ್ಲಿ ಒಂದು ಸಾಧ್ಯತೆ; ಅದನ್ನು ವೈದ್ಯರು ಪರೀಕ್ಷಿಸಬಹುದು. ಸೊಪ್ಪು, ಬೇಳೆ, ಮತ್ತು ತಿನ್ನುವವರಿಗೆ ಮೊಟ್ಟೆ ಅಥವಾ ಮಾಂಸ ಸಾಮಾನ್ಯ ಆಹಾರಗಳು. ಊಟದೊಂದಿಗೆ ಚಹಾ ಅಥವಾ ಕಾಫಿ ಸಸ್ಯ ಕಬ್ಬಿಣದ ಹೀರಿಕೆಯನ್ನು ಕಡಿಮೆ ಮಾಡಬಹುದು. ಇದು ರಕ್ತಹೀನತೆಯ ನಿರ್ಣಯವಲ್ಲ, ಮಾತ್ರೆಯ ಡೋಸ್ ಅಲ್ಲ.',
+    },
+    source: 'General nutrition education and public haemoglobin-cutoff context. Reviewed 24 Oct 2026.',
+    reviewed,
+    href: '/health/iron',
+  },
+  {
+    kind: 'article',
+    id: 'article-visit',
+    title: { en: 'What to carry to a visit', kn: 'ಭೇಟಿಗೆ ಏನು ತೆಗೆದುಕೊಳ್ಳಬಹುದು' },
+    body: {
+      en: 'Bring old reports, a list of medicines, your symptom dates, and your questions. A phone summary is a memory aid. It is not a referral letter.',
+      kn: 'ಹಳೆಯ ವರದಿಗಳು, ಔಷಧಿ ಪಟ್ಟಿ, ಲಕ್ಷಣಗಳ ದಿನಾಂಕಗಳು ಮತ್ತು ನಿಮ್ಮ ಪ್ರಶ್ನೆಗಳನ್ನು ತನ್ನಿ. ಫೋನ್ ಸಾರಾಂಶ ನೆನಪಿನ ಸಹಾಯ. ಅದು ರೆಫರಲ್ ಪತ್ರವಲ್ಲ.',
+    },
+    source: 'Demo visit-prep card. Reviewed 24 Oct 2026.',
+    reviewed,
+    href: '/passport',
+  },
+  {
+    kind: 'article',
+    id: 'article-phc',
+    title: { en: 'What a primary health centre is', kn: 'ಪ್ರಾಥಮಿಕ ಆರೋಗ್ಯ ಕೇಂದ್ರ ಎಂದರೇನು' },
+    body: {
+      en: 'A primary health centre is often the first government clinic in a rural area. Services vary by place and by day. The Malenahalli centre in this demo is fictional. For an emergency, use 112 or 108 rather than waiting for a clinic to open.',
+      kn: 'ಪ್ರಾಥಮಿಕ ಆರೋಗ್ಯ ಕೇಂದ್ರ ಹಲವು ಗ್ರಾಮ ಪ್ರದೇಶಗಳ ಮೊದಲ ಸರ್ಕಾರಿ ಚಿಕಿತ್ಸಾಲಯ. ಸೇವೆಗಳು ಊರಿಗೆ ಮತ್ತು ದಿನಕ್ಕೆ ಬದಲಾಗುತ್ತವೆ. ಈ ಮಾದರಿಯ ಮಾಲೇನಹಳ್ಳಿ ಕೇಂದ್ರ ಕಾಲ್ಪನಿಕ. ತುರ್ತಿನಲ್ಲಿ ಚಿಕಿತ್ಸಾಲಯ ತೆರೆಯುವವರೆಗೆ ಕಾಯದೆ 112 ಅಥವಾ 108 ಬಳಸಿ.',
+    },
+    source: 'Civic orientation for the demo. Not a government directory.',
+    reviewed,
+    href: '/offline',
+  },
 ]
 
-export const capstones: CapstoneTemplate[] = [
-  { career: 'aiml', title: 'Evaluate a tiny classifier', summary: 'Train or walk through a small classifier, report accuracy, and write one reason the score could mislead you.', minutes: 90, skillId: 'data', resource: 'Kaggle Learn — Intro to Machine Learning', href: 'https://www.kaggle.com/learn/intro-to-machine-learning' },
-  { career: 'software', title: 'Ship a task list with one test', summary: 'Build a tiny task list, add one check that fails when a task is counted twice, and make the check pass.', minutes: 90, skillId: 'programming', resource: 'MDN — JavaScript Guide', href: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide' },
-  { career: 'dataAnalyst', title: 'Publish a one-chart briefing', summary: 'Answer one question with a table, one chart, the sample size, and a sentence you will not claim.', minutes: 80, skillId: 'data', resource: 'Kaggle Learn — Data visualization', href: 'https://www.kaggle.com/learn/data-visualization' },
-  { career: 'uiux', title: 'Prototype one flow and test it', summary: 'Sketch a three-step flow for finishing a study task, then watch one person try it.', minutes: 80, skillId: 'creativity', resource: 'W3C WAI fundamentals', href: 'https://www.w3.org/WAI/fundamentals/' },
-  { career: 'cyber', title: 'Review one small threat', summary: 'Pick one item from the OWASP Top 10, describe the failure, and write a check a student project could add.', minutes: 75, skillId: 'problemSolving', resource: 'OWASP Top 10', href: 'https://owasp.org/www-project-top-ten/' },
-  { career: 'entrepreneur', title: 'Test an offer with five conversations', summary: 'Write a one-sentence offer, talk to five people, and record what they already do instead.', minutes: 70, skillId: 'communication', resource: 'U.S. SBA — Plan your business', href: 'https://www.sba.gov/business-guide/plan-your-business' },
-  { career: 'consulting', title: 'Write a one-page decision memo', summary: 'Frame one study decision, compare two options, and recommend one with the evidence attached.', minutes: 70, skillId: 'communication', resource: 'Plain Language guidelines', href: 'https://www.plainlanguage.gov/guidelines/' },
+export const interests = [
+  { id: 'pregnancy', label: { en: 'Pregnancy', kn: 'ಗರ್ಭಧಾರಣೆ' } },
+  { id: 'iron', label: { en: 'Iron health', kn: 'ಕಬ್ಬಿಣದ ಆರೋಗ್ಯ' } },
+  { id: 'endo', label: { en: 'Cycle pain', kn: 'ಋತುಚಕ್ರ ನೋವು' } },
+  { id: 'menopause', label: { en: 'Menopause', kn: 'ರಜೋನಿವೃತ್ತಿ' } },
+  { id: 'nutrition', label: { en: 'Food', kn: 'ಆಹಾರ' } },
+  { id: 'wellness', label: { en: 'Mental wellness', kn: 'ಮಾನಸಿಕ ಯೋಗಕ್ಷೇಮ' } },
+  { id: 'screening', label: { en: 'Screening', kn: 'ತಪಾಸಣೆ' } },
 ]
-
-export const prerequisites: Partial<Record<SkillId, SkillId[]>> = {
-  programming: ['reasoning'],
-  data: ['reasoning'],
-  problemSolving: ['reasoning'],
-  creativity: ['communication'],
-}
-
-export function deliveryLine(style: LearningStyle) {
-  if (style === 'visual') return 'Start with the diagram or chart in the resource, then do the task.'
-  if (style === 'reading') return 'Read the short guide and take five lines of notes before you start.'
-  if (style === 'practice') return 'Do the exercise first, then use the resource to check the part that stuck.'
-  return 'Skim the resource, do the exercise, then note one thing you would change.'
-}

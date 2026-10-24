@@ -1,264 +1,262 @@
-export const skillIds = [
-  'programming',
-  'reasoning',
-  'data',
-  'communication',
-  'problemSolving',
-  'creativity',
-] as const
+export type Lang = 'en' | 'kn' | 'hi' | 'gu' | 'mr' | 'ta' | 'te' | 'bn' | 'ml' | 'pa' | 'or' | 'ur'
 
-export type SkillId = (typeof skillIds)[number]
+/** English is required. Any other language may be omitted and then falls back to English. */
+export type Copy = { en: string } & Partial<Record<Exclude<Lang, 'en'>, string>>
 
-export const careerIds = [
-  'software',
-  'aiml',
-  'dataAnalyst',
-  'uiux',
-  'cyber',
-  'entrepreneur',
-  'consulting',
-] as const
+export type LifeStage =
+  | 'unspecified'
+  | 'adolescence'
+  | 'reproductive'
+  | 'pregnancy'
+  | 'postpartum'
+  | 'perimenopause'
+  | 'menopause'
 
-export type CareerId = (typeof careerIds)[number]
+export type OriginId = 'malenahalli' | 'nelamangala' | 'junction'
 
-export const interestIds = [
-  'coding',
-  'ai',
-  'data',
-  'design',
-  'business',
-  'security',
-  'communication',
-  'product',
-] as const
+export type TrafficLevel = 'light' | 'moderate' | 'heavy'
 
-export type InterestId = (typeof interestIds)[number]
+export type ModuleId = 'mama' | 'iron' | 'endo' | 'meno' | 'skin' | 'wellness' | 'nutrition' | 'general'
 
-export const educationLevels = ['school', 'undergraduate', 'postgraduate', 'professional'] as const
-export type EducationLevel = (typeof educationLevels)[number]
-
-export const learningStyles = ['visual', 'reading', 'practice', 'mixed'] as const
-export type LearningStyle = (typeof learningStyles)[number]
-
-export const difficulties = ['foundation', 'intermediate', 'advanced'] as const
-export type Difficulty = (typeof difficulties)[number]
-
-export type ContentSource = 'local' | 'openai'
-
-export interface SkillDef {
-  id: SkillId
-  label: string
-  summary: string
-  color: string
+export type Profile = {
+  kind: 'profile'
+  id: 'profile'
+  displayName: string
+  language: Lang
+  /** True only after the person picks a language. Absent or false keeps English. */
+  languageChosen?: boolean
+  lifeStage: LifeStage
+  interests: string[]
+  locationId: OriginId
+  locationEnabled: boolean
+  onlineModelConsent: boolean
+  sample: true
 }
 
-export interface CareerDef {
-  id: CareerId
-  label: string
-  blurb: string
-  targets: Record<SkillId, number>
-  reasons: Record<SkillId, string>
-  core: SkillId[]
+export type Meta = {
+  kind: 'meta'
+  id: 'meta'
+  lastSync: string | null
+  hospitalsCachedAt: string | null
+  educationCachedAt: string | null
+  simulatedOffline: boolean
 }
 
-export interface InterestDef {
-  id: InterestId
-  label: string
-  skills: SkillId[]
-}
-
-export interface Mcq {
+export type SymptomEntry = {
+  kind: 'symptom'
   id: string
-  skillId: SkillId
-  difficulty: Difficulty
-  prompt: string
-  options: [string, string, string, string]
-  correctIndex: 0 | 1 | 2 | 3
-  explanation: string
+  module: ModuleId
+  createdAt: string
+  severity: number
+  symptoms: string[]
+  notes: string
+  sample: boolean
+  stage?: string
+  bodyArea?: string
+  duration?: string
+  impact?: string
+  bleeding?: string
+  cycleDay?: number
+  mood?: string
+  sleepHours?: number
+  hotFlashes?: number
+  dietNotes?: string
 }
 
-export interface TaskTemplate {
+export type LabEntry = {
+  kind: 'lab'
   id: string
-  skillId: SkillId
-  title: string
-  summary: string
-  minutes: number
-  difficulty: Difficulty
-  style: Exclude<LearningStyle, 'mixed'>
-  resource: string
-  href: string
-  prerequisite: string | null
+  createdAt: string
+  name: string
+  value: number
+  unit: string
+  reference: string
+  context: string
+  sample: boolean
+  source: 'user' | 'report' | 'sample'
 }
 
-export interface CapstoneTemplate {
-  career: CareerId
-  title: string
-  summary: string
-  minutes: number
-  skillId: SkillId
-  resource: string
-  href: string
+export type ReportFlag = 'inside' | 'outside' | 'unclear'
+
+export type ReportField = {
+  id: string
+  label: string
+  value: string
+  unit: string
+  reference: string
+  flag: ReportFlag
+  note: string
 }
 
-export interface StudentProfile {
+export type ReportRecord = {
+  kind: 'report'
+  id: string
+  createdAt: string
+  title: string
+  docKind: 'report' | 'bill'
+  source: 'demo-text' | 'ocr' | 'manual'
+  rawText: string
+  fields: ReportField[]
+  sample: boolean
+  bill?: BillReview
+}
+
+export type BillLine = {
+  id: string
+  description: string
+  amount: number
+  note: string
+}
+
+export type BillReview = {
+  lines: BillLine[]
+  computedTotal: number
+  printedTotal: number | null
+  flags: Copy[]
+}
+
+export type MedicineRow = {
+  id: string
+  source: 'prescription' | 'package'
+  name: string
+  form: string
+  strength: string
+  raw: string
+}
+
+export type MedicineFlag = {
+  level: 'match' | 'mismatch' | 'missing' | 'extra'
+  text: Copy
+}
+
+export type MedicineCheck = {
+  kind: 'medicine'
+  id: string
+  createdAt: string
+  rows: MedicineRow[]
+  flags: MedicineFlag[]
+  pharmacistConfirmed: boolean
+  source: 'demo-text' | 'ocr' | 'manual'
+  sample: boolean
+}
+
+export type DosePeriod = 'morning' | 'afternoon' | 'evening' | 'night'
+
+export type DosePlan = {
+  kind: 'dose'
   id: string
   name: string
-  educationLevel: EducationLevel
-  confidence: Record<SkillId, number>
-  interests: InterestId[]
-  learningStyle: LearningStyle
-  career: CareerId
-  minutesPerDay: number
-  durationWeeks: number
+  time: string
+  period: DosePeriod
+  notes: string
+  repeat: 'daily'
   createdAt: string
-  isDemo: boolean
+  sample: boolean
 }
 
-export interface SkillScore {
-  skillId: SkillId
-  earned: number
-  possible: number
-  score: number
-}
-
-export interface AssessmentAttempt {
+export type DoseLog = {
+  kind: 'dose-log'
   id: string
-  startedAt: string
-  completedAt: string
-  answers: Record<string, number>
+  planId: string
+  name: string
+  status: 'taken' | 'missed' | 'skipped'
+  note: string
+  createdAt: string
+  sample: boolean
 }
 
-export interface AssessmentDraft {
-  index: number
-  answers: Record<string, number>
-}
-
-export interface GapInsight {
-  skillId: SkillId
-  demonstrated: number
-  target: number
-  gap: number
-  priority: number
-  severity: 'none' | 'small' | 'moderate' | 'large'
-  why: string
-}
-
-export interface RoadmapTask {
+export type Reminder = {
+  kind: 'reminder'
   id: string
-  skillId: SkillId
-  title: string
-  summary: string
-  minutes: number
-  difficulty: Difficulty
-  resource: string
+  title: Copy
+  due: string
   href: string
-  prerequisite: string | null
-  reason: string
+  done: boolean
 }
 
-export interface RoadmapPhase {
+export type OutboxItem = {
+  kind: 'outbox'
   id: string
-  title: string
-  summary: string
-  milestone: string
-  tasks: RoadmapTask[]
-}
-
-export interface Roadmap {
-  id: string
-  generatedAt: string
-  method: 'rules'
-  methodNote: string
-  narrative: string
-  budgetMinutes: number
-  phases: RoadmapPhase[]
-}
-
-export interface QuizQuestion {
-  id: string
-  prompt: string
-  options: string[]
-  correctIndex: number
-  explanation: string
-  skillId: SkillId
-  difficulty: Difficulty
-}
-
-export interface QuizAttempt {
-  id: string
-  topic: string
-  focus: string
-  skillId: SkillId
-  difficulty: Difficulty
-  at: string
-  source: ContentSource
-  sourceNote: string
-  questions: QuizQuestion[]
-  answers: number[]
-}
-
-export interface Flashcard {
-  id: string
-  skillId: SkillId
-  front: string
-  back: string
-  known: boolean
-  source: ContentSource
-}
-
-export interface CardReview {
-  id: string
-  cardId: string
-  at: string
-  known: boolean
-}
-
-export interface MissedQuestion {
-  id: string
-  question: QuizQuestion
-  topic: string
-  missedAt: string
-}
-
-export interface ChatMessage {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  at: string
-  source: 'learner' | 'demo' | 'openai'
-  note?: string
-}
-
-export interface Activity {
-  id: string
-  at: string
-  day: string
-  kind: 'assessment' | 'task' | 'quiz' | 'review'
-  minutes: number
+  refKind: 'symptom' | 'lab' | 'report' | 'medicine'
+  refId: string
   label: string
-  ref: string
+  createdAt: string
+  status: 'pending' | 'synced'
 }
 
-export interface StoredLearning {
-  version: 1
-  profile: StudentProfile | null
-  attempts: AssessmentAttempt[]
-  draft: AssessmentDraft | null
-  roadmap: Roadmap | null
-  taskCompletedAt: Record<string, string>
-  quizAttempts: QuizAttempt[]
-  missed: MissedQuestion[]
-  flashcards: Flashcard[]
-  cardReviews: CardReview[]
-  messages: ChatMessage[]
-  activity: Activity[]
-}
-
-export interface AchievementView {
+export type Article = {
+  kind: 'article'
   id: string
-  title: string
-  description: string
-  earnedAt: string | null
-  progress: number
-  target: number
+  title: Copy
+  body: Copy
+  source: string
+  reviewed: string
+  href: string
+}
+
+export type CostBand = 'lower' | 'moderate' | 'higher'
+
+export type RouteDef = {
+  id: string
+  label: string
+  km: number
+  baseMin: number
+  sensitivity: number
+}
+
+export type Doctor = {
+  name: string
+  specialty: string
+  onDuty: boolean | null
+}
+
+export type Hospital = {
+  kind: 'hospital'
+  id: string
+  name: string
+  area: string
+  phone: string
+  specialties: string[]
+  services: string[]
+  bedsAvailable: number | null
+  bedsTotal: number | null
+  doctors: Doctor[] | null
+  costBand: CostBand | null
+  accessibility: string[]
+  updatedAt: string
+  fictional: true
+  map: { x: number; y: number }
+  routes: Record<OriginId, RouteDef[]>
+  cachedAt?: string
+}
+
+export type AnyRecord =
+  | Profile
+  | Meta
+  | SymptomEntry
+  | LabEntry
+  | ReportRecord
+  | MedicineCheck
+  | Reminder
+  | DosePlan
+  | DoseLog
+  | OutboxItem
+  | Article
+  | Hospital
+
+export type CareNeed = 'any' | 'general' | 'pregnancy' | 'anemia' | 'gynecology' | 'mental' | 'emergency'
+
+export type Concern = {
+  specialty: string | null
+  service: string | null
+  urgent: boolean
+}
+
+export type AnswerSource = 'urgent-rule' | 'curated' | 'local-model' | 'online-model' | 'fallback'
+
+export type AssistantAnswer = {
+  text: string
+  source: AnswerSource
+  detail: Copy
+  links: { href: string; label: Copy }[]
 }

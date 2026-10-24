@@ -1,0 +1,11 @@
+{
+  "name": "HerHealth AI",
+  "short_name": "HerHealth",
+  "description": "HerHealth AI with SAKHI, an educational companion for women's health notes and fictional hospital navigation.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "lang": "en",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
