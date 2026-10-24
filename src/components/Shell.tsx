@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { Bell, BookOpen, FileHeart, Globe, HeartPulse, Hospital, MessageCircle, Pill, Receipt, ScanLine, Settings as SettingsIcon, Shield, Siren, Sparkles, Stethoscope, Wifi, WifiOff } from 'lucide-react'
+import { Bell, BookOpen, FileHeart, HeartPulse, Hospital, MessageCircle, Pill, Receipt, ScanLine, Settings as SettingsIcon, Shield, Siren, Sparkles, Stethoscope, Wifi, WifiOff } from 'lucide-react'
 import { useHealth } from '../context/HealthContext'
 import { chrome, t } from '../i18n'
-import { isLang, languages } from '../languages'
+import { LanguageSelect } from './LanguageSelect'
 import { Modal } from './ui'
 import { SakhiMark } from './SakhiMark'
 
@@ -75,15 +75,7 @@ export function Shell() {
             <span className="pill info">{t(lang, chrome.sampleData)}</span>
           </div>
           <div className="header-actions">
-            <label className="lang-control">
-              <span className="lang-control-label">{t(lang, chrome.language)}</span>
-              <span className="lang-select">
-                <Globe size={16} aria-hidden="true" />
-                <select className="lang-select-input" value={lang} onChange={(event) => { if (isLang(event.target.value)) void health.setLanguage(event.target.value) }}>
-                  {languages.map((item) => <option key={item.id} value={item.id}>{item.native}</option>)}
-                </select>
-              </span>
-            </label>
+            <LanguageSelect lang={lang} label={t(lang, chrome.language)} onChange={(next) => void health.setLanguage(next)} />
             <button type="button" className="btn danger header-emergency" onClick={() => setEmergency(true)}>
               <Siren size={16} aria-hidden="true" />
               {t(lang, chrome.emergency)}
